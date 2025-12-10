@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "date": "Nov 7, 2025",
+    "img": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop",
+    "title": "JWT-Based OTP Authentication System",
+    "description": "Comprehensive guide to implementing secure JWT-based OTP authentication for user registration and password reset workflows. Learn industry best practices for token management and security.",
+    "duration": "10 min read",
+    "category": "Security"
+  },
+  {
+    "id": 2,
+    "date": "Nov 5, 2025",
+    "img": "https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=400&h=300&fit=crop",
+    "title": "Building Scalable React Applications",
+    "description": "Master the art of building scalable React applications with proper state management, code splitting, lazy loading, and performance optimization techniques for enterprise-level projects.",
+    "duration": "15 min read",
+    "category": "Development"
+  },
+  {
+    "id": 3,
+    "date": "Nov 3, 2025",
+    "img": "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400&h=300&fit=crop",
+    "title": "Modern CSS Techniques and Patterns",
+    "description": "Explore cutting-edge CSS techniques including Grid, Flexbox, Container Queries, and CSS custom properties to create beautiful, responsive, and maintainable user interfaces.",
+    "duration": "8 min read",
+    "category": "Design"
+  },
+  {
+    "id": 4,
+    "date": "Nov 1, 2025",
+    "img": "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=300&fit=crop",
+    "title": "TypeScript Best Practices 2025",
+    "description": "Discover essential TypeScript patterns, advanced types, generics, and best practices to write more maintainable, type-safe, and scalable code in modern applications.",
+    "duration": "12 min read",
+    "category": "Development"
+  },
+  {
+    "id": 5,
+    "date": "Oct 28, 2025",
+    "img": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop",
+    "title": "RESTful API Design Principles",
+    "description": "Learn how to design robust, scalable, and maintainable RESTful APIs following industry standards, best practices, and modern architectural patterns for production systems.",
+    "duration": "14 min read",
+    "category": "Backend"
+  },
+  {
+    "id": 6,
+    "date": "Oct 25, 2025",
+    "img": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop",
+    "title": "UI/UX Design Fundamentals",
+    "description": "Master the core principles of user interface and user experience design including color theory, typography, spacing, and accessibility to create intuitive digital products.",
+    "duration": "11 min read",
+    "category": "Design"
+  },
+  {
+    "id": 7,
+    "date": "Oct 22, 2025",
+    "img": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
+    "title": "Advanced React Hooks Patterns",
+    "description": "Deep dive into advanced React Hooks patterns including custom hooks, useReducer for complex state, useMemo optimization, and building reusable hook libraries.",
+    "duration": "13 min read",
+    "category": "Development"
+  },
+  {
+    "id": 8,
+    "date": "Oct 18, 2025",
+    "img": "https://images.unsplash.com/photo-1518773553398-650c184e0bb3?w=400&h=300&fit=crop",
+    "title": "Database Optimization Techniques",
+    "description": "Learn professional database optimization strategies including indexing, query optimization, caching, connection pooling, and performance monitoring for high-traffic applications.",
+    "duration": "16 min read",
+    "category": "Backend"
+  },
+  {
+    "id": 9,
+    "date": "Oct 15, 2025",
+    "img": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
+    "title": "Microservices Architecture Guide",
+    "description": "Comprehensive guide to designing and implementing microservices architecture with service discovery, API gateways, event-driven communication, and container orchestration.",
+    "duration": "18 min read",
+    "category": "Architecture"
+  },
+  {
+    "id": 10,
+    "date": "Oct 12, 2025",
+    "img": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    "title": "Web Performance Optimization",
+    "description": "Master web performance optimization with code splitting, lazy loading, image optimization, caching strategies, and monitoring tools to achieve blazing-fast load times.",
+    "duration": "9 min read",
+    "category": "Performance"
+  }
+]
