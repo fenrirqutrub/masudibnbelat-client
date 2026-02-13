@@ -5,10 +5,11 @@ import ManageArticles from "./ManageArticles";
 import ManagePhotos from "./ManagePhotos";
 import ManageCategory from "./ManageCategory";
 import ManageQuotes from "./ManageQuotes";
+import ManageHero from "./ManageHero";
 
 // ───────────────── TYPES ─────────────────
 
-type ContentType = "articles" | "categories" | "photos" | "quotes";
+type ContentType = "articles" | "categories" | "photos" | "quotes" | "heroes";
 
 // ───────────────── COMPONENT ─────────────────
 
@@ -31,6 +32,8 @@ export const Management = () => {
         return <ManageCategory />;
       case "quotes":
         return <ManageQuotes />;
+      case "heroes":
+        return <ManageHero />;
       default:
         return <ManageArticles />;
     }

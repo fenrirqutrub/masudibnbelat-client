@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 import { IoCheckmark } from "react-icons/io5";
 
-type ContentType = "articles" | "categories" | "photos" | "quotes";
+type ContentType = "articles" | "categories" | "photos" | "quotes" | "heroes";
 
 interface ContentOption {
   id: ContentType;
@@ -28,6 +28,7 @@ const ContentTypeSelect: React.FC<ContentTypeSelectProps> = ({
     { id: "photos", label: "Manage Photos" },
     { id: "categories", label: "Manage Categories" },
     { id: "quotes", label: "Manage Quotes" },
+    { id: "heroes", label: "Manage Heros" },
   ];
 
   const filteredItems = options.filter((item) =>
