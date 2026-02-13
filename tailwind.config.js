@@ -15,6 +15,10 @@ export default {
         textPrimary: "var(--color-text)",
         textGray: "var(--color-gray)",
         textHover: "var(--color-text-hover)",
+
+        activeBorder: "var(--color-active-border)",
+        activeBg: "var(--color-active-bg)",
+        activeText: "var(--color-active-text)",
       },
     },
   },

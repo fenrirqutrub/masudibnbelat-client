@@ -153,10 +153,7 @@ const Navbar: React.FC = () => {
                 navigate("/");
               }}
             >
-              <span
-                className="hidden md:inline-block"
-                style={{ color: colors.text.primary }}
-              >
+              <span className="hidden md:inline-block text-textPrimary">
                 MiB
               </span>
 
@@ -172,22 +169,13 @@ const Navbar: React.FC = () => {
                   <span
                     key={i}
                     aria-hidden="true"
-                    className="absolute inset-0"
-                    style={{
-                      transform: `translate(${o.x}px, ${o.y}px)`,
-                      color: colors.text.primary,
-                      zIndex: o.z,
-                    }}
+                    className="absolute inset-0 text-textPrimary z-10"
+                    style={{ transform: `translate(${o.x}px, ${o.y}px)` }}
                   >
                     MiB
                   </span>
                 ))}
-                <span
-                  className="relative"
-                  style={{ color: colors.text.primary, zIndex: 10 }}
-                >
-                  MiB
-                </span>
+                <span className="relative text-textPrimary z-10">MiB</span>
               </span>
             </button>
 
@@ -213,7 +201,7 @@ const Navbar: React.FC = () => {
                     {isActive && (
                       <motion.div
                         layoutId="desktopActiveTab"
-                        className="absolute inset-0 rounded-lg border pointer-events-none"
+                        className="absolute inset-0 rounded-lg border pointer-events-none "
                         style={{
                           backgroundColor: colors.bg.secondary,
                           borderColor: colors.border,

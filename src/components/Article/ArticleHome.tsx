@@ -37,12 +37,10 @@ const ArticleHome = () => {
       {/* Section Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-3xl md:text-4xl font-bold text-textPrimary mb-2">
             Latest Articles
           </h2>
-          <p className="text-gray-500 dark:text-gray-400">
-            Explore our most recent posts
-          </p>
+          <p className="text-textGray">Explore our most recent posts</p>
         </div>
 
         <Link

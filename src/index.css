@@ -50,16 +50,25 @@
 }
 
 /* css variables */
+/* css variables */
 :root {
   --color-bg: #e9ebed;
   --color-text: #0c0d12;
-  --color-gray: #9ca3af;
+  --color-gray: #90a1b9;
   --color-text-hover: #2563eb;
+
+  --color-active-border: rgba(15, 23, 42, 0.2);
+  --color-active-bg: rgba(15, 23, 42, 0.1);
+  --color-active-text: #0f172a;
 }
 
 .dark {
   --color-bg: #0c0d12;
   --color-text: #e9ebed;
-  --color-gray: #52525b;
+  --color-gray: #90a1b9;
   --color-text-hover: #3b82f6;
+
+  --color-active-border: rgba(248, 249, 250, 0.2);
+  --color-active-bg: rgba(248, 249, 250, 0.1);
+  --color-active-text: #ffffff;
 }
