@@ -105,12 +105,12 @@ export default function AddCategory() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+      <h2 className="text-3xl md:text-5xl font-bold pt-20 mb-8   text-center text-gray-800 dark:text-white">
         Manage Categories
       </h2>
 
       {/* Add Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+      <div className="bg-white dark:bg-[#0E1014] rounded-lg shadow p-6 mb-6">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col sm:flex-row gap-3"
@@ -162,10 +162,10 @@ export default function AddCategory() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="bg-white dark:bg-[#0E1014] rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-900">
               <tr>
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   #
@@ -220,7 +220,7 @@ export default function AddCategory() {
                 categories.map((cat, index) => (
                   <tr
                     key={cat._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900 transition"
                   >
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                       {index + 1}
