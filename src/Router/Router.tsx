@@ -33,6 +33,8 @@ const Router = () => {
         {/* ✅ Dynamic Category Route - specific category এর articles */}
         <Route path="/articles/:categorySlug" element={<CategoryPage />} />
 
+        <Route path="/add-category" element={<AddCategory />} />
+
         {/* ✅ Dynamic Article Detail Route - individual article */}
         <Route
           path="/articles/:categorySlug/:articleSlug"

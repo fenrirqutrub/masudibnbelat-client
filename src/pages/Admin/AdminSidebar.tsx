@@ -29,6 +29,8 @@ const AdminSidebar = () => {
   const navItems: NavItem[] = [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "management", path: "/management", icon: LayoutDashboard },
+
+    { name: "Category", path: "/add-category", icon: FilePlus },
     { name: "Add Article", path: "/add-article", icon: FilePlus },
     { name: "Add Photo", path: "/add-photography", icon: Image },
     { name: "Add Quote", path: "/add-quotes", icon: Quote },

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Trash2, Plus, Loader2 } from "lucide-react";
 import { axiosPublic } from "../../../hooks/axiosPublic";
+import Swal from "sweetalert2";
 
 interface CategoryForm {
   name: string;
@@ -25,7 +26,7 @@ export default function AddCategory() {
     setValue,
     formState: { errors },
   } = useForm<CategoryForm>({
-    defaultValues: { name: "" }, // ✅ Fixed: was "category"
+    defaultValues: { name: "" },
   });
 
   const {
@@ -40,10 +41,9 @@ export default function AddCategory() {
     },
   });
 
-  // Add Category (POST /api/categories with { name })
+  // Add Category
   const addMutation = useMutation({
     mutationFn: (data: CategoryForm) => {
-      console.log("Sending data:", data); // Debug log
       return axiosPublic.post("/api/categories", data);
     },
     onSuccess: () => {
@@ -52,54 +52,74 @@ export default function AddCategory() {
       reset();
     },
     onError: (err: any) => {
-      console.error("Add category error:", err); // Debug log
       toast.error(err?.response?.data?.message || "Failed to add category");
     },
   });
 
-  // Delete Category (DELETE /api/categories/:id)
+  // Delete Category with SweetAlert
   const deleteMutation = useMutation({
     mutationFn: (id: string) => axiosPublic.delete(`/api/categories/${id}`),
     onSuccess: () => {
-      toast.success("Category deleted!");
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Category has been removed.",
+        showConfirmButton: false,
+        timer: 1500,
+      });
       qc.invalidateQueries({ queryKey: ["categories"] });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Failed to delete category");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err?.response?.data?.message || "Failed to delete category",
+      });
     },
   });
 
   const onSubmit: SubmitHandler<CategoryForm> = (data) => {
-    console.log("Form submitted with:", data); // Debug log
     addMutation.mutate({ name: data.name.trim() });
   };
 
   const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Delete "${name}" category?`)) {
-      deleteMutation.mutate(id);
-    }
+    Swal.fire({
+      title: "Are you sure?",
+      text: `Delete "${name}" category?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteMutation.mutate(id);
+      }
+    });
   };
 
-  // sanitize input but allow unicode letters & numbers, spaces, hyphen
   const sanitizeInput = (value: string) => {
     return value.replace(/[^\p{L}\p{N}\s-]/gu, "");
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold mb-8 text-center text-gray-800 dark:text-white">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
         Manage Categories
       </h2>
 
       {/* Add Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 mb-8">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex gap-3">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col sm:flex-row gap-3"
+        >
           <div className="flex-1">
             <input
-              className="border-[#e5eaf2] dark:bg-transparent dark:border-slate-600 dark:placeholder:text-slate-600 dark:text-slate-300 border rounded-md outline-none px-4 w-full mt-1 py-3 focus:border-[#3B9DF8] transition-colors duration-300"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition"
               {...register("name", {
-                // ✅ Fixed: was "category"
-                required: "Category is required",
+                required: "Category name is required",
                 minLength: { value: 2, message: "Minimum 2 characters" },
                 maxLength: { value: 50, message: "Maximum 50 characters" },
                 pattern: {
@@ -114,7 +134,7 @@ export default function AddCategory() {
                   shouldDirty: true,
                 });
               }}
-              placeholder="e.g., Web Development, Healthy Recipes"
+              placeholder="Enter category name"
             />
             {errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -123,79 +143,130 @@ export default function AddCategory() {
 
           <button
             type="submit"
-            disabled={addMutation.isPending} // ✅ Fixed: changed from isLoading
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg flex items-center gap-2 transition"
+            disabled={addMutation.isPending}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium rounded-md flex items-center justify-center gap-2 transition whitespace-nowrap"
           >
-            {addMutation.isPending ? ( // ✅ Fixed: changed from isLoading
+            {addMutation.isPending ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Adding...
               </>
             ) : (
               <>
-                <Plus className="w-5 h-5" />
-                Add
+                <Plus className="w-4 h-4" />
+                Add Category
               </>
             )}
           </button>
         </form>
       </div>
 
-      {/* Categories List */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
-          All Categories ({Array.isArray(categories) ? categories.length : 0})
-        </h3>
+      {/* Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <tr>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  #
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Slug
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {isLoading && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600" />
+                    <p className="text-gray-500 dark:text-gray-400 mt-2">
+                      Loading...
+                    </p>
+                  </td>
+                </tr>
+              )}
 
-        {isLoading && (
-          <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
-          </div>
-        )}
+              {isError && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center">
+                    <p className="text-red-500">
+                      Failed to load categories. Please refresh.
+                    </p>
+                  </td>
+                </tr>
+              )}
 
-        {isError && (
-          <div className="text-center py-8 text-red-500">
-            Failed to load categories. Please refresh.
-          </div>
-        )}
+              {!isLoading &&
+                Array.isArray(categories) &&
+                categories.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No categories found. Add one above!
+                      </p>
+                    </td>
+                  </tr>
+                )}
 
-        {!isLoading && Array.isArray(categories) && categories.length === 0 && (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <p className="text-lg">No categories yet.</p>
-            <p>Add your first one above!</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.isArray(categories) &&
-            categories.map((cat) => (
-              <div
-                key={cat._id}
-                className="group relative bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 rounded-lg p-4 text-center shadow hover:shadow-md transition transform hover:-translate-y-1"
-              >
-                <p className="font-medium text-gray-800 dark:text-white truncate">
-                  {cat.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {cat.slug}
-                </p>
-
-                <button
-                  onClick={() => handleDelete(cat._id, cat.name)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full disabled:opacity-50"
-                  title="Delete category"
-                  disabled={deleteMutation.isPending} // ✅ Fixed: changed from isLoading
-                >
-                  {deleteMutation.isPending ? ( // ✅ Fixed: changed from isLoading
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            ))}
+              {!isLoading &&
+                Array.isArray(categories) &&
+                categories.map((cat, index) => (
+                  <tr
+                    key={cat._id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                  >
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="flex flex-col">
+                        <span>{cat.name}</span>
+                        <span className="md:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {cat.slug}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="hidden md:table-cell px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {cat.slug}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleDelete(cat._id, cat.name)}
+                        disabled={deleteMutation.isPending}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition"
+                        title="Delete category"
+                      >
+                        {deleteMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">Delete</span>
+                          </>
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* Category Count */}
+      {!isLoading && Array.isArray(categories) && categories.length > 0 && (
+        <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center">
+          Total: {categories.length}{" "}
+          {categories.length === 1 ? "category" : "categories"}
+        </div>
+      )}
     </div>
   );
 }
