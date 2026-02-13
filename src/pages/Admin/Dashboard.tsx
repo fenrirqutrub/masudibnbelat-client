@@ -10,7 +10,7 @@ import {
   Share2,
   MessageSquare,
 } from "lucide-react";
-import LoadingSkeleton from "../../components/ui/LoadingSkeleton";
+import Loader from "../../components/ui/Loader";
 
 interface Category {
   _id: string;
@@ -189,7 +189,7 @@ const Dashboard = () => {
             </p>
           </motion.div>
 
-          {isLoading && <LoadingSkeleton />}
+          {isLoading && <Loader />}
 
           {!isLoading && (
             <>
