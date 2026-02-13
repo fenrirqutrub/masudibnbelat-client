@@ -1,8 +1,7 @@
 // Hero.tsx
 import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import "swiper/css/pagination";
 import { Pagination, Autoplay } from "swiper/modules";
+
 import { useHeroes } from "../../hooks/useHeroes";
 import Loader from "../ui/Loader";
 import ErrorState from "../ui/Errorstate";
