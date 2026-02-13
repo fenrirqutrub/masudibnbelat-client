@@ -53,13 +53,13 @@
 :root {
   --color-bg: #e9ebed;
   --color-text: #0c0d12;
-  --color-gray: #6b7280;
+  --color-gray: #9ca3af;
   --color-text-hover: #2563eb;
 }
 
 .dark {
   --color-bg: #0c0d12;
   --color-text: #e9ebed;
-  --color-gray: #9ca3af;
+  --color-gray: #52525b;
   --color-text-hover: #3b82f6;
 }

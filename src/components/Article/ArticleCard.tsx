@@ -87,20 +87,18 @@ export const ArticleCard = ({ article, categoryPath }: ArticleCardProps) => {
             {article.title}
           </h3>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4 line-clamp-3 flex-1">
+          <p className="text-sm text-textGray leading-relaxed mb-4 line-clamp-3 flex-1">
             {truncateText(article.description, 150)}
           </p>
 
           {/* Meta row: read time + "Read More" */}
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-4 font-medium">
+          <div className="flex items-center justify-between text-xs text-textGray mb-4 font-medium">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
               <span>{readTime} min read</span>
             </div>
 
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-              Read More →
-            </span>
+            <span className="text-textPrimary font-medium">Read More →</span>
           </div>
 
           <div className="border-t border-black/5 dark:border-white/5 mb-4" />
