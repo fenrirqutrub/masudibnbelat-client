@@ -41,10 +41,7 @@ export const ArticleCard = ({ article, categoryPath }: ArticleCardProps) => {
       <div
         className={`
           h-full flex flex-col rounded-xl overflow-hidden
-          border border-black/5 dark:border-white/5
-          bg-white dark:bg-[#0f1014]
-          transition-all duration-500
-          hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40
+          border border-black/5 dark:border-white/5 bg-bgPrimary transition-all duration-500 hover:shadow-xl hover:shadow-black/10  dark:hover:shadow-black/40
         `}
       >
         {/* Image */}

@@ -1,17 +1,14 @@
 import { Link } from "react-router";
-import { useTheme } from "../../context/ThemeProvider";
+
 import Social from "./Social";
 
 const Contact = () => {
-  const { theme } = useTheme();
   return (
     <footer className=" ">
       <div className="flex justify-center flex-col gap-[30px]  ">
         <div>
           <h2
-            className={`rubik-bold tracking-[10px] text-3xl md:text-5xl uppercase text-center mt-10 ${
-              theme === "dark" ? "text-[#E9EBED] " : "text-[#0C0D12]"
-            } `}
+            className={`rubik-bold tracking-[10px] text-3xl md:text-5xl uppercase text-center mt-10 text-text `}
           >
             Contact US
           </h2>

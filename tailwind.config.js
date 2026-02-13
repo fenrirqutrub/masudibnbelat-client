@@ -11,10 +11,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primaryLight: "#E9EBED",
-        primaryDark: "#0C0D12",
-        textLight: "#0C0D12",
-        textDark: "#FFFFFF",
+        bgPrimary: "var(--color-bg)",
+        textPrimary: "var(--color-text)",
+        textGray: "var(--color-gray)",
+        textHover: "var(--color-text-hover)",
       },
     },
   },
