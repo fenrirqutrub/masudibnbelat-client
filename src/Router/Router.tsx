@@ -7,7 +7,7 @@ import AdminLayout from "../layout/AdminLayout";
 import NotFound from "../pages/NotFound/NotFound";
 import PrivateRoute from "./PrivateRoute";
 import Photography from "../pages/Photography/Photography";
-import ManageCategory from "../pages/Admin/Management/ManageCategory";
+
 import ManagePhotos from "../pages/Admin/Management/ManagePhotos";
 import AddCategory from "../pages/Admin/AddNewItem/AddCategory";
 import AddArticle from "../pages/Admin/AddNewItem/AddArticles";
@@ -60,7 +60,6 @@ const Router = () => {
 
         {/* Management Routes */}
         <Route path="management" element={<Management />} />
-        <Route path="manage-category" element={<ManageCategory />} />
         <Route path="manage-articles" element={<ManageArticles />} />
         <Route path="manage-photos" element={<ManagePhotos />} />
 

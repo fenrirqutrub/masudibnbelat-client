@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import ContentTypeSelect from "../Contenttypeselect";
 import ManageArticles from "./ManageArticles";
 import ManagePhotos from "./ManagePhotos";
-import ManageCategory from "./ManageCategory";
 import ManageQuotes from "./ManageQuotes";
 import ManageHero from "./ManageHero";
 
@@ -28,8 +27,6 @@ export const Management = () => {
         return <ManageArticles />;
       case "photos":
         return <ManagePhotos />;
-      case "categories":
-        return <ManageCategory />;
       case "quotes":
         return <ManageQuotes />;
       case "heroes":
