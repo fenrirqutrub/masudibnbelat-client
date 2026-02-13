@@ -171,8 +171,8 @@ export const ManageArticles = () => {
   // ───────────────── UI ─────────────────
 
   return (
-    <div className="min-h-screen bg-[#E9EBED] text-[#0C0D12] dark:bg-[#0C0D12] dark:text-[#FFFFFF] p-6 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen ">
+      <div className="">
         {/* HEADER */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold">Manage Articles</h1>
