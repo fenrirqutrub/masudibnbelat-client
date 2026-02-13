@@ -33,8 +33,6 @@ const Router = () => {
         {/* ✅ Dynamic Category Route - specific category এর articles */}
         <Route path="/articles/:categorySlug" element={<CategoryPage />} />
 
-        <Route path="/add-category" element={<AddCategory />} />
-
         {/* ✅ Dynamic Article Detail Route - individual article */}
         <Route
           path="/articles/:categorySlug/:articleSlug"
@@ -46,28 +44,32 @@ const Router = () => {
         <Route path="*" element={<NotFound />} />
       </Route>
 
-      {/* ════════════════════ ADMIN ROUTES ════════════════════ */}
+      {/* ════════════════════ ADMIN LOGIN ════════════════════ */}
       <Route path="/admin-login" element={<AdminLogin />} />
 
+      {/* ════════════════════ ADMIN PRIVATE ROUTES ════════════════════ */}
       <Route
+        path="/dashboard"
         element={
           <PrivateRoute>
             <AdminLayout />
           </PrivateRoute>
         }
       >
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/management" element={<Management />} />
+        <Route index element={<Dashboard />} />
 
-        <Route path="/manage-category" element={<ManageCategory />} />
-        <Route path="/manage-articles" element={<ManageArticles />} />
-        <Route path="/manage-photos" element={<ManagePhotos />} />
+        {/* Management Routes */}
+        <Route path="management" element={<Management />} />
+        <Route path="manage-category" element={<ManageCategory />} />
+        <Route path="manage-articles" element={<ManageArticles />} />
+        <Route path="manage-photos" element={<ManagePhotos />} />
 
-        <Route path="/add-category" element={<AddCategory />} />
-        <Route path="/add-article" element={<AddArticle />} />
-        <Route path="/add-photography" element={<AddPhotography />} />
-        <Route path="/add-quotes" element={<AddQuotes />} />
-        <Route path="/add-hero" element={<AddHero />} />
+        {/* Add New Item Routes */}
+        <Route path="add-category" element={<AddCategory />} />
+        <Route path="add-article" element={<AddArticle />} />
+        <Route path="add-photography" element={<AddPhotography />} />
+        <Route path="add-quotes" element={<AddQuotes />} />
+        <Route path="add-hero" element={<AddHero />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

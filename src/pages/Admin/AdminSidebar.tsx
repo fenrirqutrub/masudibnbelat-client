@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,75 +8,124 @@ import {
   Image,
   Quote,
   Menu,
-  X,
   Triangle,
+  Settings,
+  LogOut,
+  ChevronDown,
+  Folder,
+  FileText,
+  ImageIcon,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
 
 import ThemeToggle from "../../components/Navbar/ThemeToggle";
 
-interface NavItem {
+interface SubNavItem {
   name: string;
   path: string;
   icon: LucideIcon;
 }
 
+interface NavItem {
+  name: string;
+  path?: string;
+  icon: LucideIcon;
+  subItems?: SubNavItem[];
+}
+
 const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
 
-  const navItems: NavItem[] = [
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { name: "management", path: "/management", icon: LayoutDashboard },
+  // Close sidebar on route change (mobile only)
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  }, [location.pathname]);
 
-    { name: "Category", path: "/add-category", icon: FilePlus },
-    { name: "Add Article", path: "/add-article", icon: FilePlus },
-    { name: "Add Photo", path: "/add-photography", icon: Image },
-    { name: "Add Quote", path: "/add-quotes", icon: Quote },
-    { name: "Add Hero", path: "/add-hero", icon: Quote },
+  // Handle window resize - automatically adjust sidebar based on screen size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsOpen(false); // Close sidebar when screen becomes smaller
+      } else {
+        setIsOpen(true); // Open sidebar when there's enough space (desktop)
+      }
+    };
+
+    // Set initial state based on screen size
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const navItems: NavItem[] = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      name: "Management",
+      path: "/dashboard/management",
+      icon: Settings,
+    },
   ];
+
+  const contentItems: NavItem = {
+    name: "Content",
+    icon: Folder,
+    subItems: [
+      { name: "Categories", path: "/dashboard/add-category", icon: FilePlus },
+      { name: "Articles", path: "/dashboard/add-article", icon: FileText },
+      {
+        name: "Photography",
+        path: "/dashboard/add-photography",
+        icon: ImageIcon,
+      },
+      { name: "Quotes", path: "/dashboard/add-quotes", icon: Quote },
+      { name: "Hero", path: "/dashboard/add-hero", icon: Image },
+    ],
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(groupName)
+        ? prev.filter((g) => g !== groupName)
+        : [...prev, groupName],
+    );
+  };
+
+  const handleLogout = () => {
+    // Add your logout logic here
+    console.log("Logging out...");
+  };
+
   return (
     <>
-      {/* Mobile Toggle */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-primaryLight dark:bg-primaryDark text-textLight dark:text-textDark p-2.5 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.div
-              key="close"
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <X className="w-5 h-5 text-gray-900 dark:text-gray-100" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="menu"
-              initial={{ rotate: 90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: -90, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Menu className="w-5 h-5 text-gray-900 dark:text-gray-100" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
+      {/* Mobile Toggle Button - Only show when sidebar is closed */}
+      {!isOpen && (
+        <motion.button
+          onClick={() => setIsOpen(true)}
+          className="fixed top-4 left-4 z-50 lg:hidden bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Menu className="w-5 h-5" />
+        </motion.button>
+      )}
 
-      {/* Overlay */}
+      {/* Overlay for Mobile */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -92,150 +141,213 @@ const AdminSidebar = () => {
 
       {/* Sidebar */}
       <motion.aside
-        initial={{ x: -280 }}
+        initial={false}
         animate={{
-          x: isOpen || window.innerWidth >= 1024 ? 0 : -280,
+          x: isOpen ? 0 : window.innerWidth >= 1024 ? 0 : -300,
         }}
         transition={{
           type: "spring",
           stiffness: 300,
           damping: 30,
         }}
-        className="fixed lg:sticky top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-40 w-[280px] overflow-hidden"
+        className="fixed lg:sticky top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-40 w-[280px] flex flex-col"
       >
-        <div className="flex flex-col h-full p-6">
-          {/* Header */}
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <motion.div
-            className="mb-8"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <Link to="/" className="flex items-center gap-2 group">
                 <motion.div
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Triangle className="w-6 h-6 fill-emerald-600 text-emerald-600" />
+                  <Triangle className="w-7 h-7 fill-emerald-600 text-emerald-600" />
                 </motion.div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                  Admin
+                  Admin Panel
                 </span>
               </Link>
-              <div>
-                <ThemeToggle size={35} animationSpeed={0.5} />
-              </div>
             </div>
-            <motion.p
-              className="text-sm text-gray-600 dark:text-gray-400"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              Manage your content
-            </motion.p>
+            <div className="flex items-center justify-between">
+              <motion.p
+                className="text-sm text-gray-600 dark:text-gray-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                Manage your content
+              </motion.p>
+              <ThemeToggle size={32} animationSpeed={0.5} />
+            </div>
           </motion.div>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {navItems.map((item, index) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+          {/* Main Nav Items */}
+          {navItems.map((item, index) => {
+            const Icon = item.icon;
+            const active = item.path ? isActive(item.path) : false;
 
-              return (
-                <motion.div
-                  key={item.path}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Link to={item.path} onClick={() => setIsOpen(false)}>
-                    <motion.div
-                      whileHover={{
-                        x: active ? 0 : 6,
-                        transition: { duration: 0.2 },
-                      }}
-                      whileTap={{ scale: 0.97 }}
-                      className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                        active
-                          ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 text-emerald-700 dark:text-emerald-400 shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:shadow-sm"
-                      }`}
-                    >
-                      {active && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute left-0 w-1 h-10 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-r-full shadow-lg shadow-emerald-500/50"
-                          transition={{
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 30,
-                          }}
-                        />
-                      )}
+            return (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Link to={item.path || "#"}>
+                  <motion.div
+                    whileHover={{
+                      x: active ? 0 : 4,
+                      transition: { duration: 0.2 },
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      active
+                        ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-700 dark:text-emerald-400 shadow-sm"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    {active && (
                       <motion.div
-                        animate={{
-                          scale: active ? 1.1 : 1,
-                          rotate: active ? [0, -10, 10, 0] : 0,
-                        }}
+                        layoutId="activeIndicator"
+                        className="absolute left-0 w-1 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-r-full"
                         transition={{
-                          scale: { duration: 0.2 },
-                          rotate: { duration: 0.5 },
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
                         }}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </motion.div>
-                      <span
-                        className={`text-sm transition-all ${
-                          active ? "font-semibold" : "font-medium"
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-                      {active && (
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-600"
-                        />
-                      )}
-                    </motion.div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </nav>
+                      />
+                    )}
+                    <Icon className="w-5 h-5" />
+                    <span
+                      className={`text-sm ${active ? "font-semibold" : "font-medium"}`}
+                    >
+                      {item.name}
+                    </span>
+                  </motion.div>
+                </Link>
+              </motion.div>
+            );
+          })}
 
-          {/* Footer */}
+          {/* Content Group (Collapsible) */}
           <motion.div
-            className="pt-4 border-t border-gray-200 dark:border-gray-700"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mt-2"
+          >
+            {/* Group Header */}
+            <motion.button
+              onClick={() => toggleGroup("content")}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <div className="flex items-center gap-3">
+                <Folder className="w-5 h-5" />
+                <span className="text-sm font-medium">Content</span>
+              </div>
+              <motion.div
+                animate={{
+                  rotate: expandedGroups.includes("content") ? 180 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="w-4 h-4" />
+              </motion.div>
+            </motion.button>
+
+            {/* Sub Items */}
+            <AnimatePresence>
+              {expandedGroups.includes("content") && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pl-4 mt-1 space-y-1">
+                    {contentItems.subItems?.map((subItem, subIndex) => {
+                      const SubIcon = subItem.icon;
+                      const active = isActive(subItem.path);
+
+                      return (
+                        <motion.div
+                          key={subItem.path}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: subIndex * 0.03 }}
+                        >
+                          <Link to={subItem.path}>
+                            <motion.div
+                              whileHover={{
+                                x: active ? 0 : 4,
+                                transition: { duration: 0.2 },
+                              }}
+                              whileTap={{ scale: 0.97 }}
+                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                                active
+                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium"
+                                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200"
+                              }`}
+                            >
+                              <SubIcon className="w-4 h-4" />
+                              <span className="text-sm">{subItem.name}</span>
+                            </motion.div>
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          {/* User Profile */}
+          <motion.div
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all cursor-pointer group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             <motion.div
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all cursor-pointer group"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold shadow-lg"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
             >
-              <motion.div
-                className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-emerald-500/30 ring-2 ring-white dark:ring-gray-900"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-              >
-                FU
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  Admin User
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                  admin@example.com
-                </p>
-              </div>
+              AD
             </motion.div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                Admin User
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                admin@example.com
+              </p>
+            </div>
           </motion.div>
+
+          {/* Logout Button */}
+          <motion.button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-sm font-medium">Logout</span>
+          </motion.button>
         </div>
       </motion.aside>
     </>
