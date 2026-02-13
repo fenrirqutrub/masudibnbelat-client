@@ -25,10 +25,9 @@ export default function AddCategory() {
     setValue,
     formState: { errors },
   } = useForm<CategoryForm>({
-    defaultValues: { name: "" },
+    defaultValues: { name: "" }, // ✅ Fixed: was "category"
   });
 
-  // Fetch Categories (note endpoint: /api/categories)
   const {
     data: categories = [],
     isLoading,
@@ -43,14 +42,17 @@ export default function AddCategory() {
 
   // Add Category (POST /api/categories with { name })
   const addMutation = useMutation({
-    mutationFn: (data: CategoryForm) =>
-      axiosPublic.post("/api/categories", data),
+    mutationFn: (data: CategoryForm) => {
+      console.log("Sending data:", data); // Debug log
+      return axiosPublic.post("/api/categories", data);
+    },
     onSuccess: () => {
       toast.success("Category added successfully!");
       qc.invalidateQueries({ queryKey: ["categories"] });
       reset();
     },
     onError: (err: any) => {
+      console.error("Add category error:", err); // Debug log
       toast.error(err?.response?.data?.message || "Failed to add category");
     },
   });
@@ -68,6 +70,7 @@ export default function AddCategory() {
   });
 
   const onSubmit: SubmitHandler<CategoryForm> = (data) => {
+    console.log("Form submitted with:", data); // Debug log
     addMutation.mutate({ name: data.name.trim() });
   };
 
@@ -95,7 +98,8 @@ export default function AddCategory() {
             <input
               className="border-[#e5eaf2] dark:bg-transparent dark:border-slate-600 dark:placeholder:text-slate-600 dark:text-slate-300 border rounded-md outline-none px-4 w-full mt-1 py-3 focus:border-[#3B9DF8] transition-colors duration-300"
               {...register("name", {
-                required: "Category name is required",
+                // ✅ Fixed: was "category"
+                required: "Category is required",
                 minLength: { value: 2, message: "Minimum 2 characters" },
                 maxLength: { value: 50, message: "Maximum 50 characters" },
                 pattern: {
@@ -119,10 +123,10 @@ export default function AddCategory() {
 
           <button
             type="submit"
-            disabled={addMutation.isLoading}
+            disabled={addMutation.isPending} // ✅ Fixed: changed from isLoading
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg flex items-center gap-2 transition"
           >
-            {addMutation.isLoading ? (
+            {addMutation.isPending ? ( // ✅ Fixed: changed from isLoading
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Adding...
@@ -180,9 +184,9 @@ export default function AddCategory() {
                   onClick={() => handleDelete(cat._id, cat.name)}
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full disabled:opacity-50"
                   title="Delete category"
-                  disabled={deleteMutation.isLoading}
+                  disabled={deleteMutation.isPending} // ✅ Fixed: changed from isLoading
                 >
-                  {deleteMutation.isLoading ? (
+                  {deleteMutation.isPending ? ( // ✅ Fixed: changed from isLoading
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Trash2 className="w-4 h-4" />

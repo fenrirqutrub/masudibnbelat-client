@@ -1,15 +1,19 @@
+// ────────────────────────────────────────────────
+//  AddArticle.tsx  —  fixed version without disabled bugs
+// ────────────────────────────────────────────────
+
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useState, useRef, useEffect } from "react";
 import { FiUpload, FiX } from "react-icons/fi";
 import { IoChevronDown } from "react-icons/io5";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosPublic } from "../../../hooks/axiosPublic";
 
 interface ArticleFormData {
   category: string;
-  img: FileList;
+  img: FileList | null;
   title: string;
   description: string;
 }
@@ -21,252 +25,229 @@ interface Category {
 }
 
 const AddArticle = () => {
-  const [imgPreview, setImgPreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [dropdownOpen, setDropdown] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    watch,
-  } = useForm<ArticleFormData>({
-    defaultValues: { category: "" },
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<ArticleFormData>({
+      defaultValues: { category: "", img: null, title: "", description: "" },
+    });
+
+  const catId = watch("category");
+  const files = watch("img");
+
+  const { data: cats = [], isLoading } = useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: async () =>
+      (await axiosPublic.get("/api/categories")).data.data ?? [],
   });
 
-  const selectedCategory = watch("category");
-
-  const { data: categories = [], isLoading: catLoading } = useQuery<Category[]>(
-    {
-      queryKey: ["categories"],
-      queryFn: async () => {
-        const res = await axiosPublic.get("/api/categories");
-        return res.data.data;
-      },
-    }
-  );
+  const mutation = useMutation({
+    mutationFn: (fd: FormData) =>
+      axiosPublic.post("/api/articles", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      }),
+    onSuccess: () => {
+      toast.success("Article created");
+      qc.invalidateQueries({ queryKey: ["articles"] });
+      reset();
+      setPreview(null);
+    },
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || "Failed"),
+  });
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setDropdown(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleImageChange = (files: FileList | null) => {
-    if (files?.[0]) {
-      const file = files[0];
-      setValue("img", files, { shouldValidate: true });
-      const reader = new FileReader();
-      reader.onloadend = () => setImgPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+  const onImage = (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Select an image");
+
+    setValue("img", fileList);
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
-  const removeImage = () => {
-    setImgPreview(null);
-    setValue("img", null as any, { shouldValidate: true });
+  const onSubmit: SubmitHandler<ArticleFormData> = (data) => {
+    if (!data.img?.[0]) return toast.error("Image required");
+    if (!data.category) return toast.error("Category required");
+
+    const fd = new FormData();
+    fd.append("title", data.title.trim());
+    fd.append("description", data.description.trim());
+    fd.append("img", data.img[0]);
+    fd.append("categoryId", data.category);
+
+    mutation.mutate(fd);
   };
 
-  const onSubmit: SubmitHandler<ArticleFormData> = async (data) => {
-    if (!watch("img")?.[0]) return toast.error("Image is required");
-
-    if (!data.category) return toast.error("Please select a category");
-
-    setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append("title", data.title);
-    formData.append("description", data.description);
-    formData.append("img", data.img[0]);
-    formData.append("categoryId", data.category);
-
-    try {
-      await axiosPublic.post("/api/articles", formData);
-      toast.success("Article added successfully!");
-      reset();
-      setImgPreview(null);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to add article");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // ─── Clean ready state ───
+  const canSubmit = Boolean(catId && files?.[0] && !mutation.isPending);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Add New Article
-          </h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Fill in the details to create a new article
-          </p>
-        </div>
+        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
+          Add New Article
+        </h2>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 space-y-6"
         >
-          {/* Category Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <label className="block text-sm font-medium mb-2">
+          {/* Category */}
+          <div className="relative" ref={ref}>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Category <span className="text-red-500">*</span>
             </label>
+            <input type="hidden" {...register("category")} />
+
             <button
               type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              disabled={isSubmitting || catLoading}
-              className="w-full px-4 py-3 text-left bg-white dark:bg-gray-700 border rounded-lg flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+              onClick={() => setDropdown((v) => !v)}
+              disabled={mutation.isPending || isLoading}
+              className="w-full px-4 py-3 text-left bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center disabled:opacity-60"
             >
-              <span className={!selectedCategory ? "text-gray-500" : ""}>
-                {selectedCategory
-                  ? categories.find((c) => c._id === selectedCategory)?.name ||
-                    selectedCategory
-                  : "Select Category"}
+              <span
+                className={
+                  catId ? "text-gray-900 dark:text-white" : "text-gray-500"
+                }
+              >
+                {catId
+                  ? (cats.find((c) => c._id === catId)?.name ?? "…")
+                  : "Select category"}
               </span>
-              {catLoading ? (
+              {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <IoChevronDown />
+                <IoChevronDown
+                  className={`transition ${dropdownOpen ? "rotate-180" : ""}`}
+                />
               )}
             </button>
 
-            {isDropdownOpen && (
-              <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-700 border rounded-lg shadow-xl max-h-64 overflow-y-auto">
-                {categories.map((cat) => (
+            {dropdownOpen && cats.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-64 overflow-auto">
+                {cats.map((c) => (
                   <button
-                    key={cat._id}
+                    key={c._id}
                     type="button"
                     onClick={() => {
-                      setValue("category", cat._id, { shouldValidate: true });
-                      setIsDropdownOpen(false);
+                      setValue("category", c._id);
+                      setDropdown(false);
                     }}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-600"
+                    className={`w-full px-4 py-2.5 text-left hover:bg-gray-100 dark:hover:bg-gray-600 ${catId === c._id ? "bg-blue-50 dark:bg-gray-600" : ""}`}
                   >
-                    {cat.name}
+                    {c.name}
                   </button>
                 ))}
               </div>
             )}
-            {errors.category && (
-              <p className="mt-1 text-sm text-red-500">Category is required</p>
-            )}
           </div>
 
-          {/* Title */}
+          {/* Title + Description (shortened for brevity) */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Title <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Title *
             </label>
             <input
-              {...register("title", {
-                required: "Title is required",
-                minLength: { value: 5, message: "Min 5 chars" },
-              })}
-              placeholder="Enter article title"
-              className="w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none"
+              {...register("title", { required: true, minLength: 5 })}
+              placeholder="Title"
+              className="w-full px-4 py-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
             />
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.title.message}
-              </p>
-            )}
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Description <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Description *
             </label>
             <textarea
-              {...register("description", {
-                required: "Description required",
-                minLength: { value: 20, message: "Min 20 chars" },
-              })}
-              rows={6}
-              placeholder="Write your article description..."
-              className="w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+              {...register("description", { required: true, minLength: 20 })}
+              rows={5}
+              placeholder="Description..."
+              className="w-full px-4 py-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 resize-none"
             />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.description.message}
-              </p>
-            )}
           </div>
 
-          {/* Image Upload */}
+          {/* Image – no required in register */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Image <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Image *
             </label>
-            {!imgPreview ? (
-              <label
-                htmlFor="img"
-                className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <FiUpload className="text-5xl text-gray-400 mb-4" />
-                <p className="text-sm text-gray-600">
-                  Click to upload (Max 5MB)
-                </p>
+            {!preview ? (
+              <label className="flex flex-col items-center justify-center h-56 border-2 border-dashed rounded-xl cursor-pointer hover:border-emerald-500">
+                <FiUpload className="text-4xl text-gray-400 mb-2" />
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  Upload image
+                </span>
                 <input
-                  id="img"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    const files = e.target.files;
-                    handleImageChange(files);
-                    setValue("img", files); // <-- update RHF value
-                  }}
                   className="hidden"
+                  onChange={(e) => onImage(e.target.files)}
                 />
               </label>
             ) : (
               <div className="relative">
                 <img
-                  src={imgPreview}
-                  alt="Preview"
-                  className="w-full h-64 object-cover rounded-lg"
+                  src={preview}
+                  alt="preview"
+                  className="w-full h-56 object-cover rounded-xl"
                 />
                 <button
                   type="button"
-                  onClick={removeImage}
-                  className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  onClick={() => {
+                    setPreview(null);
+                    setValue("img", null);
+                  }}
+                  className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full"
                 >
-                  <FiX size={20} />
+                  <FiX />
                 </button>
               </div>
             )}
-            {errors.img && (
-              <p className="mt-1 text-sm text-red-500">{errors.img.message}</p>
-            )}
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-4 pt-6">
+          {/* Submit */}
+          <div className="flex gap-4">
             <button
               type="submit"
-              disabled={isSubmitting || !selectedCategory}
-              className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg disabled:opacity-50"
+              disabled={!canSubmit}
+              className={`flex-1 py-3 rounded-lg font-medium transition ${
+                canSubmit
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+              } flex items-center justify-center gap-2`}
             >
-              {isSubmitting ? "Adding..." : "Add Article"}
+              {mutation.isPending ? (
+                <>
+                  {" "}
+                  <Loader2 className="w-5 h-5 animate-spin" /> Creating…{" "}
+                </>
+              ) : (
+                "Add Article"
+              )}
             </button>
+
             <button
               type="button"
               onClick={() => {
                 reset();
-                setImgPreview(null);
+                setPreview(null);
               }}
-              className="px-8 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded-lg"
+              disabled={mutation.isPending}
+              className="px-8 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded-lg transition disabled:opacity-50"
             >
               Reset
             </button>

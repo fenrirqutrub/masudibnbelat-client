@@ -1,8 +1,9 @@
 import { Suspense, useEffect } from "react";
 import Hero from "../Hero/Hero";
-
-import PageLoader from "../ui/PagLoader";
 import UpDown from "../ui/UpDown";
+import ArticleHome from "../Article/ArticleHome";
+import Quotes from "../Quotes/Quotes";
+import Loader from "../ui/Loader";
 
 const Home = () => {
   useEffect(() => {
@@ -11,10 +12,12 @@ const Home = () => {
 
   return (
     <div className="">
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<Loader />}>
         <Hero />
+        <ArticleHome />
+        <Quotes />
       </Suspense>
-      <div className="fixed bottom-5 right-5">
+      <div className="fixed bottom-5 right-5 z-50">
         <UpDown />
       </div>
     </div>

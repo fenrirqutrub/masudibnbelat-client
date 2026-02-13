@@ -59,12 +59,22 @@ const THEME_COLORS: Record<
 
 const getInitialTheme = (): Theme => {
   try {
+    // First check if user has a saved preference
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === "light" || saved === "dark") return saved;
   } catch {
     /* empty */
   }
-  return "dark"; // default
+
+  // If no saved preference, check system preference
+  if (typeof window !== "undefined" && window.matchMedia) {
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    return prefersDark ? "dark" : "light";
+  }
+
+  return "dark"; // fallback default
 };
 
 const useTheme = () => {
@@ -78,10 +88,7 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [nextTheme, setNextTheme] = useState<Theme>(theme);
 
-  // ⛔ OLD broken code:
-  // document.body.className = theme;
-  //
-  // ✅ FIXED: Apply theme here so Tailwind dark: classes work
+  // Apply theme so Tailwind dark: classes work
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
@@ -142,12 +149,12 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
                   height: 3,
                   borderRadius: "50%",
                   ...Object.fromEntries(
-                    Object.entries(cornerStyle).map(([k, v]) => [k, v + 250])
+                    Object.entries(cornerStyle).map(([k, v]) => [k, v + 250]),
                   ),
                   background: colors.particle,
                   boxShadow: `0 0 15px ${colors.particle.replace(
                     "0.7",
-                    "0.5"
+                    "0.5",
                   )}`,
                 }}
                 initial={{ opacity: 0, scale: 0 }}

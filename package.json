@@ -16,6 +16,7 @@
     "@tanstack/react-query": "^5.90.2",
     "axios": "^1.12.2",
     "copy-to-clipboard": "^3.3.3",
+    "date-fns": "^4.1.0",
     "firebase": "^12.5.0",
     "framer-motion": "^12.23.22",
     "lucide": "^0.544.0",
@@ -29,7 +30,7 @@
     "react-router": "^7.9.3",
     "react-syntax-highlighter": "^16.1.0",
     "sweetalert2": "^11.26.3",
-    "swiper": "^12.0.3",
+    "swiper": "^12.1.0",
     "tailwindcss": "^4.1.14",
     "use-debounce": "^10.0.6"
   },

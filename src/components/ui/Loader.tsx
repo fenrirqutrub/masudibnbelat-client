@@ -1,12 +1,28 @@
-import { motion } from "framer-motion";
+import { LoaderCircle } from "lucide-react";
 
-const Loader = () => {
+interface LoaderProps {
+  fullScreen?: boolean;
+}
+
+const Loader = ({ fullScreen = false }: LoaderProps) => {
   return (
-    <div className="flex justify-center py-16">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full"
+    <div
+      role="status"
+      aria-live="polite"
+      className={`
+        flex justify-center items-center
+        ${fullScreen ? "min-h-screen" : "py-10"}
+      `}
+    >
+      <LoaderCircle
+        className="
+          animate-spin
+          text-primary
+          w-8 h-8
+          sm:w-10 sm:h-10
+          md:w-12 md:h-12
+          lg:w-14 lg:h-14
+        "
       />
     </div>
   );

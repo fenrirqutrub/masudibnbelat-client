@@ -9,7 +9,14 @@ export default {
     "components/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primaryLight: "#E9EBED",
+        primaryDark: "#0C0D12",
+        textLight: "#0C0D12",
+        textDark: "#FFFFFF",
+      },
+    },
   },
   plugins: [require("tailwindcss-animate")],
 };

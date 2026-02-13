@@ -25,7 +25,7 @@ const Contact = () => {
           <p className="text-[0.8rem] sm:text-[0.9rem] text-gray-600 py-0 rubik-regular">
             &copy; 2021 All Rights Reserved by{" "}
             <Link to="/admin-login" className="rubik-bold">
-              Fenrir Qutrub
+              Masud ibn Belat
             </Link>
           </p>
         </div>

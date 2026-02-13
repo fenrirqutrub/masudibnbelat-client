@@ -1,14 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { IoMdMail } from "react-icons/io";
-import {
-  FaDiscord,
-  FaFacebook,
-  FaGithub,
-  FaLinkedinIn,
-  FaTelegram,
-  FaWhatsapp,
-} from "react-icons/fa";
+import { FaFacebook, FaTelegram, FaWhatsapp } from "react-icons/fa";
 
 interface SocialItem {
   key: string;
@@ -40,27 +33,7 @@ const socials: SocialItem[] = [
     color: "#24a1de",
     link: "/",
   },
-  {
-    key: "discord",
-    Icon: FaDiscord,
-    name: "Discord",
-    color: "#5865f2",
-    link: "/",
-  },
-  {
-    key: "linkedin",
-    Icon: FaLinkedinIn,
-    name: "LinkedIn",
-    color: "#0a66c2",
-    link: "/",
-  },
-  {
-    key: "github",
-    Icon: FaGithub,
-    name: "Github",
-    color: "#333333",
-    link: "/",
-  },
+
   { key: "email", Icon: IoMdMail, name: "e-Mail", color: "#ea4335", link: "/" },
 ];
 
