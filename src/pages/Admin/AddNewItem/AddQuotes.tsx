@@ -49,12 +49,12 @@ const AddQuote = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#E9EBED] dark:bg-[#0C0D12] py-12 px-4">
+    <div className="min-h-screen ">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-2xl mx-auto"
+        className="container mx-auto"
       >
         {/* Header */}
         <div className="text-center mb-8">

@@ -1,7 +1,3 @@
-// ────────────────────────────────────────────────
-//  AddArticle.tsx  —  fixed version without disabled bugs
-// ────────────────────────────────────────────────
-
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useState, useRef, useEffect } from "react";
 import { FiUpload, FiX } from "react-icons/fi";
@@ -96,16 +92,11 @@ const AddArticle = () => {
   const canSubmit = Boolean(catId && files?.[0] && !mutation.isPending);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
-          Add New Article
-        </h2>
+    <div className="min-h-screen ">
+      <div className="">
+        <h2 className="text-3xl font-bold text-center mb-8">Add New Article</h2>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 space-y-6"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className=" space-y-6">
           {/* Category */}
           <div className="relative" ref={ref}>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">

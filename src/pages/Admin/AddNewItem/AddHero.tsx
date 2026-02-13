@@ -74,12 +74,12 @@ const AddHero = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl"
+        className="w-full container"
       >
         {/* Header */}
         <motion.div
@@ -88,9 +88,7 @@ const AddHero = () => {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
-            Create Hero
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-bold  mb-3">Create Hero</h1>
           <p className="text-slate-600 dark:text-slate-400 text-lg">
             Upload your hero image to Cloudinary
           </p>
@@ -101,7 +99,7 @@ const AddHero = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 md:p-12 border border-slate-200 dark:border-slate-700"
+          className=""
         >
           {/* Status Messages */}
           <AnimatePresence mode="wait">

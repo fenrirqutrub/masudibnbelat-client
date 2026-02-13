@@ -173,8 +173,8 @@ const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-slate-800">
-      <main className="flex-1 p-6 lg:p-8 overflow-auto">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1  overflow-auto">
+        <div className="container mx-auto">
           <motion.div
             className="mb-8 mt-12 lg:mt-0"
             initial={{ opacity: 0, y: -20 }}
@@ -203,26 +203,30 @@ const Dashboard = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                      className={`bg-white dark:bg-slate-900 p-6 rounded-xl shadow-md border ${stat.borderColor} hover:shadow-lg transition-all duration-300`}
+                      className={`bg-white dark:bg-slate-900 p-6 rounded-xl shadow-md border ${stat.borderColor} hover:shadow-lg transition-all duration-300 flex justify-between items-center`}
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div
-                          className={`p-3 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}
-                        >
-                          <Icon className={`w-6 h-6 ${stat.iconColor}`} />
+                      <div className="">
+                        <div className="flex items-start justify-between mb-4">
+                          <div
+                            className={`p-3 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}
+                          >
+                            <Icon className={`w-6 h-6 ${stat.iconColor}`} />
+                          </div>
                         </div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          {stat.title}
+                        </h3>
+                        {stat.subtitle && (
+                          <p className="text-xs text-gray-500">
+                            {stat.subtitle}
+                          </p>
+                        )}
                       </div>
-                      <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                        {stat.title}
-                      </h3>
                       <p
-                        className={`text-3xl font-bold ${stat.iconColor} mb-1`}
+                        className={`text-7xl font-bold ${stat.iconColor} mb-1 opacity-20`}
                       >
                         {stat.value}
                       </p>
-                      {stat.subtitle && (
-                        <p className="text-xs text-gray-500">{stat.subtitle}</p>
-                      )}
                     </motion.div>
                   );
                 })}
