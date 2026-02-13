@@ -76,12 +76,12 @@ const Quotes = () => {
         pauseOnHover={false}
         pauseOnClick={true}
         direction="left"
-        className="py-4"
+        className="py-4 flex items-center"
       >
         {quotes.map((quote) => (
           <div
             key={quote.uniqueId || quote._id}
-            className="mx-4 sm:mx-6 md:mx-8 inline-block"
+            className="mx-4 sm:mx-6 md:mx-8 inline-flex items-center"
           >
             {/* Paper Card with Lines */}
             <div
@@ -90,7 +90,8 @@ const Quotes = () => {
                 transition-all duration-300
                 cursor-grab active:cursor-grabbing select-none
                 overflow-hidden
-                bg-white dark:bg-[#1a1b23]"
+                bg-white dark:bg-[#1a1b23]
+                flex items-center"
             >
               {/* Horizontal Lines - Light Mode */}
               <div
@@ -122,7 +123,7 @@ const Quotes = () => {
               <div className="absolute left-8 top-0 bottom-0 w-[2px] bg-red-400/60 dark:bg-red-400/40" />
 
               {/* Quote Content */}
-              <div className="relative z-10 pl-6">
+              <div className="relative z-10 pl-6 w-full">
                 <p
                   className="text-base sm:text-lg whitespace-pre-wrap break-words text-[#0C0D12] dark:text-[#E9EBED]"
                   style={{ lineHeight: "20px" }}

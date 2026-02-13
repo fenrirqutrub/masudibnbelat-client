@@ -133,12 +133,12 @@ const Navbar: React.FC = () => {
       <nav
         className={`fixed z-50 transition-all duration-300 ${
           state.scrolled
-            ? "top-0 left-0 right-0 py-3 border"
+            ? "top-0 left-0 right-0 py-3 border-b shadow-lg"
             : "top-0 left-0 right-0 py-4"
         }`}
         style={{
-          backgroundColor: state.scrolled ? colors.bg.primary : "transparent",
-          backdropFilter: state.scrolled ? "blur(12px)" : "none",
+          backgroundColor: colors.bg.primary,
+          backdropFilter: "blur(12px)",
           borderColor: state.scrolled ? colors.border : "transparent",
         }}
       >
@@ -273,7 +273,7 @@ const Navbar: React.FC = () => {
             {/* Drawer */}
             <motion.div
               className="fixed inset-y-0 right-0 w-full max-w-md z-[56] md:hidden shadow-2xl overflow-hidden"
-              style={{ backgroundColor: colors.bg.mobile }}
+              style={{ backgroundColor: colors.bg.primary }}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
@@ -323,9 +323,6 @@ const Navbar: React.FC = () => {
                                 : colors.text.secondary,
                             }}
                           >
-                            <span className="text-lg font-semibold capitalize">
-                              {item.name}
-                            </span>
                             {isActive && (
                               <motion.div
                                 className="absolute inset-0 rounded-xl pointer-events-none"
@@ -340,9 +337,12 @@ const Navbar: React.FC = () => {
                                 }}
                               />
                             )}
+                            <span className="text-lg font-semibold capitalize relative z-10">
+                              {item.name}
+                            </span>
                             {isActive && (
                               <span
-                                className="text-sm ml-2"
+                                className="text-sm ml-2 relative z-10"
                                 style={{ color: colors.text.secondary }}
                               >
                                 Current
