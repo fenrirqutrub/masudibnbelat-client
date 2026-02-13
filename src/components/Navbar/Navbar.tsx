@@ -147,7 +147,7 @@ const Navbar: React.FC = () => {
             {/* LOGO */}
             <button
               className="relative text-2xl md:text-3xl pacifico leading-none cursor-pointer"
-              aria-label="Masud ibn Belat"
+              aria-label="MiB"
               onClick={() => {
                 handleLogo();
                 navigate("/");
@@ -157,7 +157,7 @@ const Navbar: React.FC = () => {
                 className="hidden md:inline-block"
                 style={{ color: colors.text.primary }}
               >
-                Masud ibn Belat
+                MiB
               </span>
 
               <span
@@ -179,14 +179,14 @@ const Navbar: React.FC = () => {
                       zIndex: o.z,
                     }}
                   >
-                    Masud ibn Belat
+                    MiB
                   </span>
                 ))}
                 <span
                   className="relative"
                   style={{ color: colors.text.primary, zIndex: 10 }}
                 >
-                  Masud ibn Belat
+                  MiB
                 </span>
               </span>
             </button>
@@ -289,7 +289,7 @@ const Navbar: React.FC = () => {
                     className="text-2xl font-bold pacifico"
                     style={{ color: colors.text.primary }}
                   >
-                    Menu
+                    MiB
                   </h2>
                   <motion.button
                     onClick={toggleMobileMenu}
