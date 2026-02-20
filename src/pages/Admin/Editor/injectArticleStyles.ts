@@ -2,7 +2,7 @@ let injected = false;
 
 export function injectArticleStyles() {
   if (injected) return;
-  injected = true;
+  injected = false;
   const s = document.createElement("style");
   s.textContent = `
     :root {
@@ -90,12 +90,18 @@ export function injectArticleStyles() {
     }
     .ce-code-gutter-line{display:block;padding:0 10px 0 14px;text-align:right;color:var(--ce-line-num-color);font-size:12px;line-height:1.7;min-height:1.7em}
     .ce-code-content{flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .ce-code-pre{
-      margin:0;padding:10px 16px;font-size:13px;line-height:1.7;tab-size:2;
-      font-family:inherit;color:var(--ce-code-text);background:transparent;
-      white-space:pre;word-break:normal;overflow-x:auto;
-    }
-    .ce-code-line{display:block;min-height:1.7em;white-space:pre}
+.ce-code-pre {
+  margin:0; padding:10px 16px; font-size:13px; line-height:1.7; tab-size:2;
+  font-family:inherit; color:var(--ce-code-text); background:transparent;
+  white-space: pre; 
+  overflow-x: auto;
+}
+
+
+.ce-code-line {
+  display: inline;  
+  min-height: 1.7em;
+}
 
     /* Mobile code font size */
     @media (max-width: 640px) {
@@ -644,12 +650,19 @@ function buildStaticBlock(lang: string, rawCode: string): HTMLElement {
   content.className = "ce-code-content";
   const pre = document.createElement("pre");
   pre.className = "ce-code-pre";
-  lines.forEach((line) => {
+
+  // নতুন কোড:
+  lines.forEach((line, i) => {
     const el = document.createElement("span");
     el.className = "ce-code-line";
     el.innerHTML = highlightCode(line, lang) || "\u00A0";
     pre.appendChild(el);
+    // শেষ line ছাড়া সবার পরে newline যোগ করুন
+    if (i < lines.length - 1) {
+      pre.appendChild(document.createTextNode("\n"));
+    }
   });
+
   content.appendChild(pre);
 
   const body = document.createElement("div");
@@ -688,25 +701,29 @@ export function processArticleCodeBlocks(container: HTMLElement): void {
     }
 
     let rawCode = "";
+
+    // এভাবে করুন:
     const highlighted = block.querySelector<HTMLElement>(
       "pre code.ce-code-highlighted",
     );
-    if (highlighted)
-      rawCode = (highlighted.textContent ?? "")
-        .replace(/\u200B/g, "")
-        .replace(/\u00A0/g, " ")
-        .trimEnd();
-    if (!rawCode.trim()) {
-      const ta = block.querySelector<HTMLTextAreaElement>("textarea");
-      if (ta?.value?.trim())
-        rawCode = ta.value.replace(/\u200B/g, "").trimEnd();
-    }
-    if (!rawCode.trim()) {
-      const pre = block.querySelector<HTMLElement>("pre");
-      rawCode = (pre?.textContent ?? "")
-        .replace(/\u200B/g, "")
-        .replace(/\u00A0/g, " ")
-        .trimEnd();
+    if (highlighted) {
+      // প্রতিটা line div আলাদাভাবে নিয়ে \n দিয়ে join করুন
+      const lineDivs = highlighted.querySelectorAll<HTMLElement>("div");
+      if (lineDivs.length > 0) {
+        rawCode = Array.from(lineDivs)
+          .map((div) =>
+            (div.textContent ?? "")
+              .replace(/\u200B/g, "")
+              .replace(/\u00A0/g, " "),
+          )
+          .join("\n")
+          .trimEnd();
+      } else {
+        rawCode = (highlighted.textContent ?? "")
+          .replace(/\u200B/g, "")
+          .replace(/\u00A0/g, " ")
+          .trimEnd();
+      }
     }
 
     block.replaceWith(buildStaticBlock(lang, rawCode));

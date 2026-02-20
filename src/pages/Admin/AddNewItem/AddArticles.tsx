@@ -25,6 +25,7 @@ interface Category {
 const AddArticle = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [dropdownOpen, setDropdown] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
 
@@ -57,6 +58,7 @@ const AddArticle = () => {
       qc.invalidateQueries({ queryKey: ["articles"] });
       reset();
       setPreview(null);
+      setEditorKey((k) => k + 1);
     },
 
     onError: (err: unknown) => {
@@ -207,6 +209,7 @@ const AddArticle = () => {
               Description *
             </label>
             <Editor
+              key={editorKey}
               value={description}
               onChange={(val) => setValue("description", val)}
               placeholder="Write your description..."

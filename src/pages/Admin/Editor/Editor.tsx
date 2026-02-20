@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { loadKaTeX, renderMathToString } from "../../../utility/mathRenderer";
+import { loadKaTeX, renderMathToString } from "./mathRenderer";
 
 interface EditorProps {
   value?: string;
@@ -1043,7 +1043,7 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
     codeEl.innerHTML = lines
       .map(
         (line) =>
-          `<div style="min-height:1.7em;">${highlightCode(line, lang) || "\u00A0"}</div>`,
+          `<div style="min-height:1.7em;">${highlightCode(line, lang) || " "}</div>`,
       )
       .join("");
     requestAnimationFrame(() => {
@@ -1140,6 +1140,7 @@ export default function Editor({
 }: EditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternal = useRef(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
     injectStyles();
@@ -1148,13 +1149,10 @@ export default function Editor({
   }, []);
 
   useEffect(() => {
-    if (!editorRef.current || isInternal.current) {
-      isInternal.current = false;
-      return;
-    }
-    if (editorRef.current.innerHTML !== value)
-      editorRef.current.innerHTML = value || "";
-  }, [value]);
+    if (!editorRef.current || initialized.current) return;
+    initialized.current = true;
+    editorRef.current.innerHTML = value || "";
+  }, []);
 
   const emit = useCallback(() => {
     if (!editorRef.current || !onChange) return;

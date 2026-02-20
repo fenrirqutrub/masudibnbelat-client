@@ -2,13 +2,17 @@ import { Calendar, UserRound, MessageCircle, Eye, Send } from "lucide-react";
 import type { BaseArticle } from "../../types/Article.types";
 import { formatDate, formatTimeAgo } from "../../utility/Formatters";
 import { useEffect } from "react";
+import parse, { Element } from "html-react-parser";
 import {
   applyArticleTheme,
   injectArticleStyles,
   processArticleCodeBlocks,
   watchThemeChanges,
-} from "../../utility/injectArticleStyles";
-import { loadKaTeX, renderMathInContainer } from "../../utility/mathRenderer";
+} from "../../pages/Admin/Editor/injectArticleStyles";
+import {
+  loadKaTeX,
+  renderMathInContainer,
+} from "../../pages/Admin/Editor/mathRenderer";
 
 interface ArticleHeaderProps {
   article: BaseArticle;
@@ -124,10 +128,25 @@ export const ArticleHeader = ({
       <div className="border-t border-gray-300 dark:border-slate-800 my-6 sm:my-8 w-full" />
 
       <article className="prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none">
-        <div
-          className="p-2 sm:p-3 text-gray-700 dark:text-[#abc2d3] leading-relaxed article-body overflow-x-hidden"
-          dangerouslySetInnerHTML={{ __html: article.description }}
-        />
+        <div className="p-2 sm:p-3 text-gray-700 dark:text-[#abc2d3] leading-relaxed article-body overflow-x-hidden">
+          {parse(article.description, {
+            replace(domNode) {
+              if (domNode instanceof Element) {
+                if ("contenteditable" in domNode.attribs) {
+                  delete domNode.attribs["contenteditable"];
+                }
+                if (domNode.name === "textarea") {
+                  return <></>;
+                }
+              }
+            },
+
+            htmlparser2: {
+              lowerCaseTags: false,
+              lowerCaseAttributeNames: false,
+            },
+          })}
+        </div>
       </article>
 
       <div className="border-t border-gray-300 dark:border-slate-800 mt-12 sm:mt-16 mb-6 sm:mb-8 w-full" />

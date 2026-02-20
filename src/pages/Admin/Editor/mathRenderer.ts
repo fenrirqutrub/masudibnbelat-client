@@ -24,6 +24,16 @@ function getWindow(): KaTeXWindow {
   return window as KaTeXWindow;
 }
 
+// mathRenderer.ts - add this helper at the top
+function cleanMathExpr(expr: string): string {
+  return expr
+    .replace(/\u00A0/g, " ") // non-breaking space → regular space
+    .replace(/\u200B/g, "") // zero-width space → remove
+    .replace(/\u200C/g, "") // zero-width non-joiner → remove
+    .replace(/\u200D/g, "") // zero-width joiner → remove
+    .trim();
+}
+
 export function loadKaTeX(): Promise<void> {
   if (katexLoaded) return Promise.resolve();
   if (katexLoading) return katexLoading;
@@ -67,43 +77,15 @@ export function loadKaTeX(): Promise<void> {
   return katexLoading;
 }
 
-/** Single expression → HTML string (inline or display) */
 export function renderMathToString(expr: string, display = false): string {
-  const k = getWindow().katex;
-
-  if (!k) {
-    const safe = expr
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    return `<span class="${
-      display ? "ce-math-display" : "ce-math-inline"
-    }" data-math="${encodeURIComponent(expr)}" data-katex-pending="true">${safe}</span>`;
-  }
-
-  try {
-    return k.renderToString(expr, {
-      displayMode: display,
-      throwOnError: false,
-      trust: false,
-    });
-  } catch {
-    const safe = expr
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    return `<span class="${
-      display ? "ce-math-display" : "ce-math-inline"
-    }" data-math="${encodeURIComponent(expr)}" data-katex-pending="true">${safe}</span>`;
-  }
+  const cls = display ? "ce-math-display" : "ce-math-inline";
+  const safe = expr
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return `<span class="${cls}" data-math="${encodeURIComponent(expr)}">${safe}</span>`;
 }
 
-/**
- * Renders all math in a container element.
- * Handles: $inline$  $$display$$  \(...\)  \[...\]
- *          .ce-math-inline / .ce-math-display  (Editor saved format)
- * Mobile-safe: uses retry logic and touch-friendly sizing.
- */
 export function renderMathInContainer(container: HTMLElement | null): void {
   if (!container) return;
 
@@ -120,9 +102,11 @@ export function renderMathInContainer(container: HTMLElement | null): void {
       .forEach((el) => {
         if (el.dataset.katexDone === "1") return;
 
-        const expr = el.dataset.math
-          ? decodeURIComponent(el.dataset.math)
-          : (el.textContent ?? "");
+        const expr = cleanMathExpr(
+          el.dataset.math
+            ? decodeURIComponent(el.dataset.math)
+            : (el.textContent ?? ""),
+        );
 
         const display = el.classList.contains("ce-math-display");
 
@@ -142,9 +126,12 @@ export function renderMathInContainer(container: HTMLElement | null): void {
     container
       .querySelectorAll<HTMLElement>("[data-katex-pending]")
       .forEach((el) => {
-        const expr = el.dataset.math
-          ? decodeURIComponent(el.dataset.math)
-          : (el.textContent ?? "");
+        const expr = cleanMathExpr(
+          el.dataset.math
+            ? decodeURIComponent(el.dataset.math)
+            : (el.textContent ?? ""),
+        );
+
         const display = el.classList.contains("ce-math-display");
         try {
           el.innerHTML = k.renderToString(expr, {
