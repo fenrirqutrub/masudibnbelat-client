@@ -62,13 +62,30 @@ const AddArticle = () => {
     },
 
     onError: (err: unknown) => {
+      // Log full error details to help debug server issues
       console.error("Full error:", err);
-      const message =
-        err instanceof Error
-          ? err.message
-          : (err as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message;
-      toast.error(message || "Failed");
+
+      type AxiosErr = {
+        response?: {
+          status?: number;
+          data?: { message?: string; error?: string; details?: unknown };
+        };
+        message?: string;
+      };
+      const axErr = err as AxiosErr;
+      const serverMsg =
+        axErr?.response?.data?.message ||
+        axErr?.response?.data?.error ||
+        axErr?.message;
+
+      // Show status + message for easier debugging
+      const status = axErr?.response?.status;
+      const displayMsg = status
+        ? `${status}: ${serverMsg || "Server error"}`
+        : serverMsg || "Failed to create article";
+
+      console.error("Server response:", axErr?.response?.data);
+      toast.error(displayMsg);
     },
   });
 
@@ -101,9 +118,21 @@ const AddArticle = () => {
     const fd = new FormData();
     fd.append("title", data.title.trim());
     fd.append("description", data.description.trim());
-    fd.append("author", data.author.trim()); // ← NEW
+    // Only append author if provided — avoids schema errors if field not in backend
+    if (data.author?.trim()) {
+      fd.append("author", data.author.trim());
+    }
     fd.append("img", data.img[0]);
     fd.append("categoryId", data.category);
+
+    // Debug: log what we're sending
+    console.log("Submitting FormData fields:", {
+      title: data.title.trim(),
+      author: data.author?.trim() || "(empty, not sent)",
+      categoryId: data.category,
+      description: data.description.trim().slice(0, 80) + "…",
+      img: data.img[0].name,
+    });
 
     mutation.mutate(fd);
   };
@@ -194,11 +223,14 @@ const AddArticle = () => {
           {/* Author */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-              Author
+              Author{" "}
+              <span className="text-gray-400 text-xs font-normal">
+                (optional)
+              </span>
             </label>
             <input
               {...register("author")}
-              placeholder="Author name (optional)"
+              placeholder="Author name"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>

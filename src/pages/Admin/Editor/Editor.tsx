@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { loadKaTeX, renderMathToString } from "./mathRenderer";
+import { getThemeTokens, updateEditorTheme } from "./Editortheme";
 
 interface EditorProps {
   value?: string;
@@ -129,108 +130,82 @@ const HIGHLIGHT_MAP: Record<string, string> = {
   pink: "#fbcfe8",
 };
 
-const CALLOUT_TYPES: Record<
+// ── Tailwind-style color palette for callouts ────────────────────────────────
+const CALLOUT_COLOR_PALETTE: Record<
   string,
-  {
-    icon: string;
-    borderColor: string;
-    headerBg: string;
-    bodyBg: string;
-    titleColor: string;
-  }
+  { hex: string; bgAlpha: string; icon: string }
 > = {
-  note: {
-    icon: "📝",
-    borderColor: "#3b82f6",
-    headerBg: "rgba(59,130,246,0.22)",
-    bodyBg: "rgba(59,130,246,0.06)",
-    titleColor: "#93c5fd",
-  },
-  info: {
-    icon: "ℹ️",
-    borderColor: "#06b6d4",
-    headerBg: "rgba(6,182,212,0.22)",
-    bodyBg: "rgba(6,182,212,0.06)",
-    titleColor: "#67e8f9",
-  },
-  tip: {
-    icon: "💡",
-    borderColor: "#10b981",
-    headerBg: "rgba(16,185,129,0.22)",
-    bodyBg: "rgba(16,185,129,0.06)",
-    titleColor: "#6ee7b7",
-  },
-  success: {
-    icon: "✅",
-    borderColor: "#22c55e",
-    headerBg: "rgba(34,197,94,0.22)",
-    bodyBg: "rgba(34,197,94,0.06)",
-    titleColor: "#86efac",
-  },
-  question: {
-    icon: "❓",
-    borderColor: "#84cc16",
-    headerBg: "rgba(132,204,22,0.22)",
-    bodyBg: "rgba(132,204,22,0.06)",
-    titleColor: "#bef264",
-  },
-  warning: {
-    icon: "⚠️",
-    borderColor: "#f59e0b",
-    headerBg: "rgba(245,158,11,0.28)",
-    bodyBg: "rgba(245,158,11,0.08)",
-    titleColor: "#fcd34d",
-  },
-  failure: {
-    icon: "❌",
-    borderColor: "#ef4444",
-    headerBg: "rgba(239,68,68,0.22)",
-    bodyBg: "rgba(239,68,68,0.06)",
-    titleColor: "#fca5a5",
-  },
-  danger: {
-    icon: "🔥",
-    borderColor: "#f97316",
-    headerBg: "rgba(249,115,22,0.22)",
-    bodyBg: "rgba(249,115,22,0.06)",
-    titleColor: "#fdba74",
-  },
-  bug: {
-    icon: "🐛",
-    borderColor: "#ec4899",
-    headerBg: "rgba(236,72,153,0.22)",
-    bodyBg: "rgba(236,72,153,0.06)",
-    titleColor: "#f9a8d4",
-  },
-  example: {
-    icon: "📋",
-    borderColor: "#8b5cf6",
-    headerBg: "rgba(139,92,246,0.22)",
-    bodyBg: "rgba(139,92,246,0.06)",
-    titleColor: "#c4b5fd",
-  },
-  quote: {
-    icon: "💬",
-    borderColor: "#6b7280",
-    headerBg: "rgba(107,114,128,0.22)",
-    bodyBg: "rgba(107,114,128,0.06)",
-    titleColor: "#d1d5db",
-  },
-  abstract: {
-    icon: "📄",
-    borderColor: "#0ea5e9",
-    headerBg: "rgba(14,165,233,0.22)",
-    bodyBg: "rgba(14,165,233,0.06)",
-    titleColor: "#7dd3fc",
-  },
-  todo: {
-    icon: "☑️",
-    borderColor: "#06b6d4",
-    headerBg: "rgba(6,182,212,0.22)",
-    bodyBg: "rgba(6,182,212,0.06)",
-    titleColor: "#67e8f9",
-  },
+  // Reds
+  red: { hex: "#ef4444", bgAlpha: "rgba(239,68,68", icon: "🔴" },
+  rose: { hex: "#f43f5e", bgAlpha: "rgba(244,63,94", icon: "🌹" },
+  pink: { hex: "#ec4899", bgAlpha: "rgba(236,72,153", icon: "🩷" },
+  // Oranges
+  orange: { hex: "#f97316", bgAlpha: "rgba(249,115,22", icon: "🟠" },
+  amber: { hex: "#f59e0b", bgAlpha: "rgba(245,158,11", icon: "🟡" },
+  // Yellows
+  yellow: { hex: "#eab308", bgAlpha: "rgba(234,179,8", icon: "💛" },
+  lime: { hex: "#84cc16", bgAlpha: "rgba(132,204,22", icon: "💚" },
+  // Greens
+  green: { hex: "#22c55e", bgAlpha: "rgba(34,197,94", icon: "🟢" },
+  emerald: { hex: "#10b981", bgAlpha: "rgba(16,185,129", icon: "💚" },
+  teal: { hex: "#14b8a6", bgAlpha: "rgba(20,184,166", icon: "🩵" },
+  // Blues
+  cyan: { hex: "#06b6d4", bgAlpha: "rgba(6,182,212", icon: "🩵" },
+  sky: { hex: "#0ea5e9", bgAlpha: "rgba(14,165,233", icon: "🔵" },
+  blue: { hex: "#3b82f6", bgAlpha: "rgba(59,130,246", icon: "🔵" },
+  indigo: { hex: "#6366f1", bgAlpha: "rgba(99,102,241", icon: "🟣" },
+  // Purples
+  violet: { hex: "#8b5cf6", bgAlpha: "rgba(139,92,246", icon: "🟣" },
+  purple: { hex: "#a855f7", bgAlpha: "rgba(168,85,247", icon: "🟣" },
+  fuchsia: { hex: "#d946ef", bgAlpha: "rgba(217,70,239", icon: "💜" },
+  // Neutrals
+  gray: { hex: "#6b7280", bgAlpha: "rgba(107,114,128", icon: "⬜" },
+  slate: { hex: "#64748b", bgAlpha: "rgba(100,116,139", icon: "🩶" },
+  zinc: { hex: "#71717a", bgAlpha: "rgba(113,113,122", icon: "🩶" },
+  stone: { hex: "#78716c", bgAlpha: "rgba(120,113,108", icon: "🟤" },
+  brown: { hex: "#a16207", bgAlpha: "rgba(161,98,7", icon: "🟤" },
+  // Also support old named callouts
+  note: { hex: "#3b82f6", bgAlpha: "rgba(59,130,246", icon: "📝" },
+  info: { hex: "#06b6d4", bgAlpha: "rgba(6,182,212", icon: "ℹ️" },
+  tip: { hex: "#10b981", bgAlpha: "rgba(16,185,129", icon: "💡" },
+  success: { hex: "#22c55e", bgAlpha: "rgba(34,197,94", icon: "✅" },
+  warning: { hex: "#f59e0b", bgAlpha: "rgba(245,158,11", icon: "⚠️" },
+  danger: { hex: "#f97316", bgAlpha: "rgba(249,115,22", icon: "🔥" },
+  bug: { hex: "#ec4899", bgAlpha: "rgba(236,72,153", icon: "🐛" },
+  example: { hex: "#8b5cf6", bgAlpha: "rgba(139,92,246", icon: "📋" },
+  quote: { hex: "#6b7280", bgAlpha: "rgba(107,114,128", icon: "💬" },
 };
+
+// Resolve any color name → callout config
+function resolveCalloutConfig(type: string): {
+  icon: string;
+  borderColor: string;
+  headerBg: string;
+  bodyBg: string;
+  titleColor: string;
+} {
+  const palette = CALLOUT_COLOR_PALETTE[type.toLowerCase()];
+  if (palette) {
+    return {
+      icon: palette.icon,
+      borderColor: palette.hex,
+      headerBg: `${palette.bgAlpha},0.18)`,
+      bodyBg: `${palette.bgAlpha},0.06)`,
+      titleColor: palette.hex,
+    };
+  }
+  // Fallback: try CSS named color directly
+  return {
+    icon: "📌",
+    borderColor: type,
+    headerBg: "rgba(99,102,241,0.15)",
+    bodyBg: "rgba(99,102,241,0.05)",
+    titleColor: type,
+  };
+}
+
+// Keep for backward compat — now just a proxy
+const CALLOUT_TYPES = CALLOUT_COLOR_PALETTE;
 
 const BANGLA_LETTERS = [
   "ক",
@@ -786,52 +761,12 @@ function injectStyles() {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function updateEditorTheme(forceTheme?: "dark" | "light") {
-  if (forceTheme) {
-    try {
-      localStorage.setItem("theme", forceTheme);
-    } catch (err) {
-      console.error(err);
-    }
-    document.documentElement.setAttribute("data-theme", forceTheme);
-  }
-  const tk = getThemeTokens();
-  document.querySelectorAll<HTMLElement>(".ce-code-block").forEach((block) => {
-    block.style.background = tk.codeBg;
-    block.style.borderColor = tk.codeBorder;
-    const hdr = block.querySelector<HTMLElement>("div:first-child");
-    if (hdr) {
-      hdr.style.background = tk.codeHdrBg;
-      hdr.style.borderColor = tk.codeHdrBorder;
-    }
-    const lbl = hdr?.querySelector<HTMLElement>("span");
-    if (lbl) lbl.style.color = tk.codeLang;
-    const btn = hdr?.querySelector<HTMLElement>("button");
-    if (btn) {
-      btn.style.color = tk.codeCopy;
-      btn.style.borderColor = tk.codeCopyBorder;
-    }
-    const pre = block.querySelector<HTMLElement>("pre");
-    if (pre) pre.style.color = tk.codeText;
-    const body = block.querySelector<HTMLElement>("div:nth-child(2)");
-    const gutter = body?.firstElementChild as HTMLElement | null;
-    if (gutter) {
-      gutter.style.background = tk.lineNumBg;
-      gutter.style.borderRightColor = tk.lineNumBorder;
-      gutter.style.color = tk.lineNumColor;
-      gutter.querySelectorAll<HTMLElement>("div").forEach((d) => {
-        d.style.color = tk.lineNumColor;
-      });
-    }
-  });
-}
-
 function buildCallout(
   type: string,
   titleText?: string,
   bodyHtml?: string,
 ): HTMLElement {
-  const cfg = CALLOUT_TYPES[type] ?? CALLOUT_TYPES.note;
+  const cfg = resolveCalloutConfig(type);
   const wrapper = document.createElement("div");
   wrapper.className = "ce-callout";
   wrapper.dataset.calloutType = type;
@@ -866,41 +801,6 @@ function buildCallout(
   });
   wrapper.append(header, body);
   return wrapper;
-}
-
-function getThemeTokens() {
-  const stored = (() => {
-    try {
-      return localStorage.getItem("theme");
-    } catch {
-      return null;
-    }
-  })();
-  const html = document.documentElement;
-  const attrTheme = html.getAttribute("data-theme");
-  const domTheme =
-    attrTheme === "dark" || attrTheme === "light"
-      ? attrTheme
-      : html.classList.contains("dark")
-        ? "dark"
-        : null;
-  const theme =
-    stored === "dark" || stored === "light" ? stored : (domTheme ?? "dark");
-  const dark = theme === "dark";
-  return {
-    dark,
-    codeBg: dark ? "#1a1d2e" : "#f8f8f8",
-    codeHdrBg: dark ? "#222538" : "#efefef",
-    codeBorder: dark ? "rgba(255,255,255,0.07)" : "#e2e2e2",
-    codeHdrBorder: dark ? "rgba(255,255,255,0.06)" : "#e0e0e0",
-    codeText: dark ? "#cdd6f4" : "#333",
-    codeLang: dark ? "#7c7f9e" : "#888",
-    codeCopy: dark ? "#7c7f9e" : "#999",
-    codeCopyBorder: dark ? "rgba(255,255,255,0.1)" : "#d4d4d4",
-    lineNumBg: dark ? "#1e2136" : "#f0f0f0",
-    lineNumColor: dark ? "#565878" : "#bbb",
-    lineNumBorder: dark ? "rgba(255,255,255,0.06)" : "#e2e2e2",
-  };
 }
 
 function buildCodeBlock(lang: string, code = ""): HTMLElement {
@@ -1370,6 +1270,7 @@ export default function Editor({
               /* fall through to placeholder */
             }
           }
+          // eslint-disable-next-line prefer-const
           renderedHTML = renderMathInline(expr);
           commitHTML(typed.length - m[0].length, offset, renderedHTML);
           return true;
@@ -1697,7 +1598,7 @@ export default function Editor({
     };
 
     const doInsertCallout = (type: string) => {
-      const cfg = CALLOUT_TYPES[type] ?? CALLOUT_TYPES.note;
+      const cfg = resolveCalloutConfig(type);
       const wrapper = document.createElement("div");
       wrapper.className = "ce-callout";
       wrapper.dataset.calloutType = type;
@@ -1755,6 +1656,12 @@ export default function Editor({
     // Callout: [!note] etc
     const cm = /^\[!([a-z]+)\]$/.exec(lineText);
     if (cm && CALLOUT_TYPES[cm[1]]) {
+      if (block) block.textContent = "";
+      doInsertCallout(cm[1]);
+      return true;
+    }
+    // Also accept any word as color-callout even if not in palette
+    if (cm && cm[1]) {
       if (block) block.textContent = "";
       doInsertCallout(cm[1]);
       return true;
@@ -2328,7 +2235,7 @@ export default function Editor({
           return true;
         };
         const cm = /^\[!([a-z]+)\]$/.exec(lineText);
-        if (cm && CALLOUT_TYPES[cm[1]]) {
+        if (cm && cm[1]) {
           const block =
             (startContainer as HTMLElement).closest?.(
               "p,div,h1,h2,h3,h4,blockquote",
@@ -2460,7 +2367,7 @@ export default function Editor({
       <details className="ce-shortcuts mt-1 text-xs">
         <summary>⌨️ Shortcuts &amp; Syntax</summary>
         <div className="ce-shortcuts-body">
-          <div className="sc-head">Inline (close syntax to apply)</div>
+          <div className="sc-head">Inline Formatting</div>
           <div>
             <code>**text**</code> → <b>Bold</b>
           </div>
@@ -2480,68 +2387,162 @@ export default function Editor({
             <code>~text~</code> → sub<sub>script</sub>
           </div>
           <div>
-            <code>::red::text::</code> → colored text
+            <code>!!text!!</code> → remove format
+          </div>
+
+          <div className="sc-head">Color &amp; Highlight</div>
+          <div>
+            <code>::red::text::</code> →{" "}
+            <span style={{ color: "#ef4444" }}>colored text</span>
           </div>
           <div>
-            <code>;;24;;text;;</code> → font size
+            <code>::blue::text::</code> →{" "}
+            <span style={{ color: "#3b82f6" }}>colored text</span>
           </div>
           <div>
-            <code>==text==</code> → highlight
+            <code>==text==</code> →{" "}
+            <mark
+              style={{
+                background: "#fef08a",
+                borderRadius: 3,
+                padding: "0 2px",
+              }}
+            >
+              highlight
+            </mark>
           </div>
           <div>
             <code>==green==text==</code> → colored highlight
           </div>
           <div>
-            <code>!!text!!</code> → remove format
+            <code>;;24;;text;;</code> → font size px
           </div>
+
           <div className="sc-head">Math (LaTeX)</div>
           <div>
-            <code>$\frac{"{1}{2}"}$</code> → inline math
+            <code>$\frac{"1}{2"}$</code> → inline math
           </div>
           <div>
             <code>[math]...[/math]</code> → display math
           </div>
-          <div className="sc-head">Block (prefix + Space)</div>
+
+          <div className="sc-head">Block Triggers (type + Space)</div>
           <div>
-            <code>#</code>–<code>####</code> → H1–H4
+            <code>#</code> → H1 &nbsp; <code>##</code> → H2 &nbsp;{" "}
+            <code>###</code> → H3
           </div>
           <div>
-            <code>&gt; text</code> → Blockquote
+            <code>&gt;</code> → Blockquote
           </div>
           <div>
-            <code>* text</code> / <code>- text</code> → Bullet
+            <code>*</code> or <code>-</code> → Bullet list
           </div>
           <div>
-            <code>1. text</code> → Numbered list
+            <code>1.</code> → Numbered list
           </div>
           <div>
-            <code>```js</code> + Space → code block
+            <code>a.</code> → Alphabetic list
           </div>
           <div>
-            <code>[!note]</code> + Space → callout
-          </div>
-          <div className="sc-head">New blocks (prefix + Space)</div>
-          <div>
-            <code>[pre]</code> + Space → pre-line block
+            <code>i.</code> → Roman numeral list
           </div>
           <div>
-            <code>[left]</code> + Space → left align
+            <code>ক.</code> → Bangla list
           </div>
           <div>
-            <code>[center]</code> + Space → center align
+            <code>```js</code> → Code block (js/py/ts/go…)
+          </div>
+
+          <div className="sc-head">Color Callout (type + Space)</div>
+          <div style={{ gridColumn: "1/-1", lineHeight: 2 }}>
+            {[
+              ["red", "#ef4444"],
+              ["rose", "#f43f5e"],
+              ["pink", "#ec4899"],
+              ["orange", "#f97316"],
+              ["amber", "#f59e0b"],
+              ["yellow", "#eab308"],
+              ["lime", "#84cc16"],
+              ["green", "#22c55e"],
+              ["emerald", "#10b981"],
+              ["teal", "#14b8a6"],
+              ["cyan", "#06b6d4"],
+              ["sky", "#0ea5e9"],
+              ["blue", "#3b82f6"],
+              ["indigo", "#6366f1"],
+              ["violet", "#8b5cf6"],
+              ["purple", "#a855f7"],
+              ["fuchsia", "#d946ef"],
+              ["gray", "#6b7280"],
+              ["slate", "#64748b"],
+              ["brown", "#a16207"],
+            ].map(([name, hex]) => (
+              <code
+                key={name}
+                style={{
+                  marginRight: 4,
+                  marginBottom: 4,
+                  display: "inline-block",
+                  borderLeft: `3px solid ${hex}`,
+                  paddingLeft: 4,
+                  background: `${hex}18`,
+                  borderRadius: 3,
+                }}
+              >
+                [!{name}]
+              </code>
+            ))}
+          </div>
+          <div
+            style={{
+              gridColumn: "1/-1",
+              fontSize: "10px",
+              color: "#6b7280",
+              marginTop: 2,
+            }}
+          >
+            যেকোনো color নাম কাজ করবে: <code>[!note]</code> <code>[!info]</code>{" "}
+            <code>[!warning]</code> <code>[!tip]</code> <code>[!success]</code>{" "}
+            <code>[!danger]</code>
+          </div>
+
+          <div className="sc-head">Pre-line &amp; Alignment (type + Space)</div>
+          <div>
+            <code>[pre]</code> → pre-line block
           </div>
           <div>
-            <code>[right]</code> + Space → right align
+            <code>[left]</code> → left align
           </div>
           <div>
-            <code>[justify]</code> + Space → justify
-          </div>
-          <div className="sc-head">Keys</div>
-          <div>
-            <kbd>Tab</kbd> indent &nbsp; <kbd>Shift+Tab</kbd> outdent
+            <code>[center]</code> → center align
           </div>
           <div>
-            <kbd>Esc</kbd> / <kbd>Shift+Enter</kbd> exit block
+            <code>[right]</code> → right align
+          </div>
+          <div>
+            <code>[justify]</code> → justify
+          </div>
+
+          <div className="sc-head">Block Syntax (Enter to apply)</div>
+          <div>
+            <code>[pre]text[/pre]</code> → pre-line
+          </div>
+          <div>
+            <code>[center]...[/center]</code> → aligned block
+          </div>
+          <div>
+            <code>[math]...[/math]</code> → display math
+          </div>
+
+          <div className="sc-head">Navigation Keys</div>
+          <div>
+            <kbd>Tab</kbd> → indent &nbsp; <kbd>Shift+Tab</kbd> → outdent
+          </div>
+          <div>
+            <kbd>Esc</kbd> or <kbd>Shift+Enter</kbd> → exit block
+          </div>
+          <div>
+            <kbd>Enter</kbd> (empty list item) → exit list
           </div>
         </div>
       </details>

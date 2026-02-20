@@ -7,7 +7,7 @@ import {
   type FC,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { updateEditorTheme } from "../pages/Admin/Editor/Editor";
+import { updateEditorTheme } from "../pages/Admin/Editor/Editortheme";
 
 type Theme = "light" | "dark";
 type Corner = "top-right" | "top-left" | "bottom-right" | "bottom-left";
