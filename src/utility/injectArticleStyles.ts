@@ -49,29 +49,116 @@ export function injectArticleStyles() {
     .ce-indent-3{margin-left:6em!important}.ce-indent-4{margin-left:8em!important}
     .ce-indent-5{margin-left:10em!important}.ce-indent-6{margin-left:12em!important}
     .ce-indent-7{margin-left:14em!important}.ce-indent-8{margin-left:16em!important}
-    .ce-code-block{position:relative;margin:8px 0;border-radius:8px;overflow:hidden;background:var(--ce-code-bg);border:1px solid var(--ce-code-border);font-family:'JetBrains Mono','Fira Code','Cascadia Code',monospace}
+
+    /* ── Code block base ── */
+    .ce-code-block{
+      position:relative;margin:8px 0;border-radius:8px;overflow:hidden;
+      background:var(--ce-code-bg);border:1px solid var(--ce-code-border);
+      font-family:'JetBrains Mono','Fira Code','Cascadia Code',monospace;
+      /* Mobile: allow horizontal scroll */
+      max-width:100%;
+    }
     .ce-code-header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--ce-code-header-bg);border-bottom:1px solid var(--ce-code-header-border)}
     .ce-code-lang{font-size:11px;color:var(--ce-code-lang-color);text-transform:uppercase;letter-spacing:.1em;font-weight:600;font-family:inherit}
-    .ce-code-copy{font-size:11px;color:var(--ce-code-copy-color);background:transparent;border:1px solid var(--ce-code-copy-border);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all .15s;font-family:inherit}
+
+    /* ── Copy button – MUST work on touch ── */
+    .ce-code-copy{
+      font-size:11px;color:var(--ce-code-copy-color);background:transparent;
+      border:1px solid var(--ce-code-copy-border);border-radius:4px;
+      padding:4px 10px;cursor:pointer;transition:all .15s;font-family:inherit;
+      /* Critical for mobile: ensure touch events fire */
+      pointer-events:all !important;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
+      -webkit-user-select:none;
+      position:relative;
+      z-index:10;
+      min-height:28px;
+      min-width:44px;
+    }
     .ce-code-copy:hover{opacity:.8}
+    .ce-code-copy:active{opacity:.6}
     .ce-code-copy.copied{color:#4ade80!important;border-color:rgba(74,222,128,.4)!important}
-    .ce-code-body{display:flex}
-    .ce-code-gutter{flex-shrink:0;min-width:3.2em;padding:10px 0;background:var(--ce-line-num-bg);border-right:1px solid var(--ce-code-border);user-select:none;-webkit-user-select:none;pointer-events:none}
+
+    .ce-code-body{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .ce-code-gutter{
+      flex-shrink:0;min-width:3.2em;padding:10px 0;
+      background:var(--ce-line-num-bg);border-right:1px solid var(--ce-code-border);
+      user-select:none;-webkit-user-select:none;pointer-events:none;
+      position:sticky;left:0;z-index:1;
+    }
     .ce-code-gutter-line{display:block;padding:0 10px 0 14px;text-align:right;color:var(--ce-line-num-color);font-size:12px;line-height:1.7;min-height:1.7em}
-    .ce-code-content{flex:1;min-width:0;overflow-x:auto}
-    .ce-code-pre{margin:0;padding:10px 16px;font-size:13px;line-height:1.7;tab-size:2;font-family:inherit;color:var(--ce-code-text);background:transparent;white-space:pre-wrap;word-break:break-word}
-    .ce-code-line{display:block;min-height:1.7em;white-space:pre-wrap;word-break:break-word}
+    .ce-code-content{flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .ce-code-pre{
+      margin:0;padding:10px 16px;font-size:13px;line-height:1.7;tab-size:2;
+      font-family:inherit;color:var(--ce-code-text);background:transparent;
+      white-space:pre;word-break:normal;overflow-x:auto;
+    }
+    .ce-code-line{display:block;min-height:1.7em;white-space:pre}
+
+    /* Mobile code font size */
+    @media (max-width: 640px) {
+      .ce-code-pre{font-size:12px;padding:8px 12px}
+      .ce-code-gutter-line{font-size:11px}
+      .ce-code-header{padding:6px 10px}
+    }
+
     .article-body textarea{display:none!important}
     .article-body .ce-callout *{pointer-events:none!important;outline:none!important}
-    .article-body .ce-code-copy{pointer-events:all!important;cursor:pointer!important}
+    .article-body .ce-code-copy{pointer-events:all!important;cursor:pointer!important;touch-action:manipulation!important}
     .article-body .ce-callout-fold{display:none!important}
+
     .ce-callout{margin:8px 0;border-radius:6px;overflow:hidden;border-left-width:4px;border-left-style:solid;border-top:none;border-right:none;border-bottom:none}
     .ce-callout-header{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:700;font-size:14px;letter-spacing:.01em}
     .ce-callout-icon{font-size:15px;line-height:1;flex-shrink:0}
     .ce-callout-title{flex:1}
     .ce-callout-body{padding:10px 14px 12px 14px;min-height:2em;line-height:1.7;font-size:14px}
-    .ce-math-inline{display:inline;font-family:'STIX Two Math','Latin Modern Math',serif;font-size:1.05em;background:rgba(99,102,241,.12);border-radius:3px;padding:0 3px}
-    .ce-math-display{display:block;text-align:center;font-family:'STIX Two Math','Latin Modern Math',serif;font-size:1.25em;padding:12px 16px;margin:6px 0;background:rgba(99,102,241,.07);border-radius:6px;border-left:3px solid rgba(99,102,241,.4)}
+
+    /* ── Math – mobile responsive ── */
+    .ce-math-inline{
+      display:inline;
+      font-family:'STIX Two Math','Latin Modern Math',serif;
+      font-size:1.05em;
+      background:rgba(99,102,241,.12);
+      border-radius:3px;padding:0 3px;
+    }
+    .ce-math-display{
+      display:block;text-align:center;
+      font-family:'STIX Two Math','Latin Modern Math',serif;
+      font-size:1.1em;
+      padding:12px 8px;margin:6px 0;
+      background:rgba(99,102,241,.07);
+      border-radius:6px;
+      border-left:3px solid rgba(99,102,241,.4);
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    /* KaTeX responsive on small screens */
+    .katex-display{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:4px 0}
+    .katex{font-size:1em!important}
+    @media (max-width:640px){
+      .ce-math-display{font-size:0.95em;padding:10px 4px}
+      .katex{font-size:0.9em!important}
+    }
+
+    /* ── Pre-line block ── */
+    .ce-preline{white-space:pre-line!important;font-family:inherit;margin:6px 0;padding:10px 14px;background:rgba(0,0,0,0.04);border-left:3px solid #6b7280;border-radius:0 4px 4px 0;line-height:1.7}
+    .dark .ce-preline,[data-theme="dark"] .ce-preline{background:rgba(255,255,255,0.04)}
+    .article-body .ce-preline{outline:none;pointer-events:none;user-select:text;white-space:pre-line!important}
+
+    /* ── Text alignment ── */
+    .ce-align-left,.article-body .ce-align-left{text-align:left}
+    .ce-align-center,.article-body .ce-align-center{text-align:center}
+    .ce-align-right,.article-body .ce-align-right{text-align:right}
+    .ce-align-justify,.article-body .ce-align-justify{text-align:justify}
+    .ce-align-block{margin:2px 0;min-height:1.4em}
+    .article-body .ce-align-block{outline:none;pointer-events:none;user-select:text}
+
+    /* ── Article card math preview ── */
+    .article-card-math .katex,.article-card-math .ce-math-inline,.article-card-math .ce-math-display{
+      font-size:0.85em;background:transparent;border:none;padding:0;display:inline;
+    }
   `;
   document.head.appendChild(s);
 }
@@ -506,10 +593,11 @@ function performCopy(text: string, btn: HTMLButtonElement): void {
       document.execCommand("copy");
       onSuccess();
     } catch (err) {
-      console.error(err);
+      console.error("Copy failed:", err);
     }
     document.body.removeChild(ta);
   };
+
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text).then(onSuccess, onFail);
   } else {
@@ -531,12 +619,15 @@ function buildStaticBlock(lang: string, rawCode: string): HTMLElement {
   copyBtn.className = "ce-code-copy";
   copyBtn.type = "button";
   copyBtn.textContent = "Copy";
-  // rawCode closure এ bind — re-render এ হারিয়ে যাবে না
-  copyBtn.addEventListener("click", (e) => {
+
+  // Use both click and touchend for maximum mobile compatibility
+  const handleCopy = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
     performCopy(rawCode, copyBtn);
-  });
+  };
+  copyBtn.addEventListener("click", handleCopy, { passive: false });
+  copyBtn.addEventListener("touchend", handleCopy, { passive: false });
 
   header.append(langLabel, copyBtn);
 
@@ -568,12 +659,9 @@ function buildStaticBlock(lang: string, rawCode: string): HTMLElement {
   const newBlock = document.createElement("div");
   newBlock.className = "ce-code-block";
   newBlock.dataset.codeLang = lang;
-  // rawCode কে data attribute এ store করি
-  // পরে re-run এ এটা থেকে পড়বো
   newBlock.dataset.codeText = rawCode;
   newBlock.setAttribute("data-processed", "true");
   newBlock.append(header, body);
-
   return newBlock;
 }
 
@@ -581,49 +669,38 @@ export function processArticleCodeBlocks(container: HTMLElement): void {
   container.querySelectorAll<HTMLElement>(".ce-code-block").forEach((block) => {
     const lang = block.dataset.codeLang ?? "text";
 
-    // ── Already processed? rawCode data-code-text থেকে নাও ──
-    // Re-render এ block টা ইতিমধ্যে static হয়ে গেছে,
-    // data-code-text এ rawCode সংরক্ষিত আছে।
     if (block.dataset.processed === "true") {
+      // Re-attach copy button handlers (they're lost on re-render)
       const savedCode = block.dataset.codeText ?? "";
-      // copy button এর listener আবার bind করো
       const copyBtn = block.querySelector<HTMLButtonElement>(".ce-code-copy");
       if (copyBtn) {
-        // পুরনো listener সরাও (clone trick)
         const newBtn = copyBtn.cloneNode(true) as HTMLButtonElement;
-        newBtn.addEventListener("click", (e) => {
+        const handleCopy = (e: Event) => {
           e.preventDefault();
           e.stopPropagation();
           performCopy(savedCode, newBtn);
-        });
+        };
+        newBtn.addEventListener("click", handleCopy, { passive: false });
+        newBtn.addEventListener("touchend", handleCopy, { passive: false });
         copyBtn.replaceWith(newBtn);
       }
-      return; // DOM rebuild দরকার নেই
+      return;
     }
 
-    // ── First time: extract from original Editor structure ──
     let rawCode = "";
-
-    // PRIMARY: pre > code.ce-code-highlighted (DB থেকে load হওয়া structure)
     const highlighted = block.querySelector<HTMLElement>(
       "pre code.ce-code-highlighted",
     );
-    if (highlighted) {
+    if (highlighted)
       rawCode = (highlighted.textContent ?? "")
         .replace(/\u200B/g, "")
         .replace(/\u00A0/g, " ")
         .trimEnd();
-    }
-
-    // Fallback: textarea value (live editor)
     if (!rawCode.trim()) {
       const ta = block.querySelector<HTMLTextAreaElement>("textarea");
-      if (ta?.value?.trim()) {
+      if (ta?.value?.trim())
         rawCode = ta.value.replace(/\u200B/g, "").trimEnd();
-      }
     }
-
-    // Fallback: যেকোনো pre
     if (!rawCode.trim()) {
       const pre = block.querySelector<HTMLElement>("pre");
       rawCode = (pre?.textContent ?? "")
@@ -633,6 +710,18 @@ export function processArticleCodeBlocks(container: HTMLElement): void {
     }
 
     block.replaceWith(buildStaticBlock(lang, rawCode));
+  });
+
+  // Make pre-line blocks read-only in article view
+  container.querySelectorAll<HTMLElement>(".ce-preline").forEach((el) => {
+    el.removeAttribute("contenteditable");
+    el.textContent = (el.textContent ?? "").replace(/\u200B/g, "");
+  });
+
+  // Make align blocks read-only in article view
+  container.querySelectorAll<HTMLElement>(".ce-align-block").forEach((el) => {
+    el.removeAttribute("contenteditable");
+    el.textContent = (el.textContent ?? "").replace(/\u200B/g, "");
   });
 }
 
@@ -680,11 +769,14 @@ const LIGHT_T = {
   lineNumBg: "#f0f0f0",
 };
 
+let themeObserver: MutationObserver | null = null;
+
 export function applyArticleTheme(): void {
   requestAnimationFrame(() => {
     const dark = isDarkMode();
     const t = dark ? DARK_T : LIGHT_T;
     const root = document.documentElement;
+
     (
       [
         ["--ce-code-bg", t.codeBg],
@@ -741,6 +833,41 @@ export function applyArticleTheme(): void {
       if (ttl) ttl.style.color = bc;
     });
   });
+}
+
+/**
+ * Observe theme changes on html element and auto-apply code block theme.
+ * Call once on mount to keep mobile theme switches in sync.
+ */
+export function watchThemeChanges(): () => void {
+  if (themeObserver) {
+    themeObserver.disconnect();
+    themeObserver = null;
+  }
+
+  themeObserver = new MutationObserver(() => {
+    applyArticleTheme();
+  });
+
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class", "data-theme", "data-color-scheme"],
+  });
+  themeObserver.observe(document.body, {
+    attributes: true,
+    attributeFilter: ["class", "data-theme", "data-color-scheme"],
+  });
+
+  // Also listen to prefers-color-scheme media query changes
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const mqHandler = () => applyArticleTheme();
+  mq.addEventListener("change", mqHandler);
+
+  return () => {
+    themeObserver?.disconnect();
+    themeObserver = null;
+    mq.removeEventListener("change", mqHandler);
+  };
 }
 
 /** @deprecated use applyArticleTheme() */

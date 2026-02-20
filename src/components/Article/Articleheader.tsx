@@ -6,6 +6,7 @@ import {
   applyArticleTheme,
   injectArticleStyles,
   processArticleCodeBlocks,
+  watchThemeChanges,
 } from "../../utility/injectArticleStyles";
 import { loadKaTeX, renderMathInContainer } from "../../utility/mathRenderer";
 
@@ -20,25 +21,40 @@ export const ArticleHeader = ({
   commentsCount,
   onShare,
 }: ArticleHeaderProps) => {
+  // Load KaTeX as early as possible
   useEffect(() => {
-    loadKaTeX();
+    loadKaTeX().catch(() => {});
   }, []);
 
   useEffect(() => {
     injectArticleStyles();
     applyArticleTheme();
 
-    const timer = setTimeout(() => {
+    // Start watching theme changes (returns cleanup fn)
+    const stopWatching = watchThemeChanges();
+
+    const processContent = () => {
       const articleBody = document.querySelector<HTMLElement>(".article-body");
       if (!articleBody) return;
-
       processArticleCodeBlocks(articleBody);
       applyArticleTheme();
       renderMathInContainer(articleBody);
-    }, 400);
+    };
 
-    return () => clearTimeout(timer);
-  }, [article._id, commentsCount]);
+    // Run immediately for desktop
+    const timer1 = setTimeout(processContent, 100);
+    // Run again for mobile (slower paint)
+    const timer2 = setTimeout(processContent, 600);
+    // Final retry for slow connections
+    const timer3 = setTimeout(processContent, 1500);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      stopWatching();
+    };
+  }, [article._id]);
 
   return (
     <>
@@ -109,7 +125,7 @@ export const ArticleHeader = ({
 
       <article className="prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none">
         <div
-          className="p-2 sm:p-3 text-gray-700 dark:text-[#abc2d3] leading-relaxed article-body"
+          className="p-2 sm:p-3 text-gray-700 dark:text-[#abc2d3] leading-relaxed article-body overflow-x-hidden"
           dangerouslySetInnerHTML={{ __html: article.description }}
         />
       </article>

@@ -266,6 +266,7 @@ const BANGLA_LETTERS = [
   "স",
   "হ",
 ];
+
 function toLowerAlpha(n: number): string {
   let r = "";
   while (n > 0) {
@@ -718,12 +719,9 @@ function highlightCode(code: string, lang: string): string {
   return r;
 }
 
-// ★ CHANGED: KaTeX দিয়ে render, source data-math এ save করো
 function renderMathInline(content: string): string {
   return renderMathToString(content, false);
 }
-
-// ★ CHANGED: display math ও KaTeX দিয়ে
 function renderMathDisplay(content: string): string {
   return renderMathToString(content, true);
 }
@@ -765,9 +763,16 @@ function injectStyles() {
     .ce-callout-fold.folded{transform:rotate(-90deg);}
     .ce-callout-body{padding:10px 14px 12px 14px;outline:none;min-height:2em;line-height:1.7;font-size:14px;}
     .ce-callout-body[data-empty="true"]:before{content:attr(data-placeholder);color:rgba(255,255,255,0.25);pointer-events:none;}
-    /* ★ Math styles — KaTeX এর নিজস্ব CSS আছে, এগুলো wrapper এর জন্য */
     .ce-math-inline{display:inline;cursor:default;}
     .ce-math-display{display:block;text-align:center;padding:12px 16px;margin:6px 0;background:rgba(99,102,241,0.07);border-radius:6px;border-left:3px solid rgba(99,102,241,0.4);cursor:default;}
+    /* ── Pre-line block ── */
+    .ce-preline{white-space:pre-line;font-family:inherit;margin:6px 0;padding:10px 14px;background:rgba(0,0,0,0.04);border-left:3px solid #6b7280;border-radius:0 4px 4px 0;line-height:1.7;outline:none;min-height:1.6em;}
+    .dark .ce-preline,[data-theme="dark"] .ce-preline{background:rgba(255,255,255,0.04);}
+    /* ── Text alignment ── */
+    .ce-align-left{text-align:left;}
+    .ce-align-center{text-align:center;}
+    .ce-align-right{text-align:right;}
+    .ce-align-justify{text-align:justify;}
     .ce-shortcuts{margin-top:6px;font-size:11.5px;color:#9ca3af;border:1px solid rgba(255,255,255,0.07);border-radius:6px;overflow:hidden;}
     .ce-shortcuts summary{cursor:pointer;user-select:none;padding:5px 10px;background:rgba(255,255,255,0.03);list-style:none;display:flex;align-items:center;gap:6px;}
     .ce-shortcuts summary::marker,.ce-shortcuts summary::-webkit-details-marker{display:none;}
@@ -952,14 +957,12 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
         copyBtn.style.color = tk.codeCopy;
       }, 2000);
     };
-    if (navigator.clipboard && window.isSecureContext) {
+    if (navigator.clipboard && window.isSecureContext)
       navigator.clipboard
         .writeText(text)
         .then(done)
         .catch(() => fallbackCopy(text, done));
-    } else {
-      fallbackCopy(text, done);
-    }
+    else fallbackCopy(text, done);
   });
   header.append(langLabel, copyBtn);
   const body = document.createElement("div");
@@ -1118,6 +1121,15 @@ function restoreCursorOffset(container: HTMLElement, offset: number) {
   sel.addRange(r);
 }
 
+// ─── TEXT ALIGNMENT HELPERS ──────────────────────────────────────────────────
+
+const ALIGN_MAP: Record<string, string> = {
+  "text-left": "ce-align-left",
+  "text-center": "ce-align-center",
+  "text-right": "ce-align-right",
+  "text-justify": "ce-align-justify",
+};
+
 export default function Editor({
   value = "",
   onChange,
@@ -1205,6 +1217,7 @@ export default function Editor({
         isInternal.current = true;
         onChange?.(editor.innerHTML);
       };
+
       if (typed.endsWith("~~")) {
         const m = /~~([^~\n]+)~~$/.exec(typed);
         if (m) {
@@ -1339,7 +1352,7 @@ export default function Editor({
     const parentEl = container.parentElement;
     if (
       parentEl?.closest(
-        ".ce-code-textarea,.ce-callout-body,.ce-callout-title,.ce-content",
+        ".ce-code-textarea,.ce-callout-body,.ce-callout-title,.ce-content,.ce-preline",
       )
     )
       return false;
@@ -1348,6 +1361,8 @@ export default function Editor({
     ) as HTMLElement | null;
     if (!block || block === editor || !editor.contains(block)) return false;
     const fullText = block.textContent?.replace(/\u200B/g, "") ?? "";
+
+    // ── Heading ──
     const hm = /^(#{1,4}) (.*)$/.exec(fullText);
     if (hm) {
       const level = hm[1].length,
@@ -1361,6 +1376,7 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
+    // ── Blockquote ──
     const bq = /^> (.*)$/.exec(fullText);
     if (bq) {
       const rawOff = saveCursorOffset(block);
@@ -1372,6 +1388,7 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
+    // ── Bullet list ──
     const bl = /^[*-] (.*)$/.exec(fullText);
     if (bl) {
       const rawOff = saveCursorOffset(block);
@@ -1397,9 +1414,10 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
+
+    // ── [math] display block ──
     const mathBlock = /^\[math\]([\s\S]+)\[\/math\]$/.exec(fullText.trim());
     if (mathBlock) {
-      // ★ KaTeX display render
       const expr = mathBlock[1];
       const mathEl = document.createElement("div");
       mathEl.className = "ce-math-display";
@@ -1420,6 +1438,55 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
+
+    // ── [pre]...[/pre] pre-line block ──
+    const preBlock = /^\[pre\]([\s\S]*)\[\/pre\]$/.exec(fullText.trim());
+    if (preBlock) {
+      const content = preBlock[1];
+      const preEl = document.createElement("div");
+      preEl.className = "ce-preline";
+      preEl.contentEditable = "true";
+      preEl.dataset.blockType = "preline";
+      preEl.textContent = content || "\u200B";
+      block.parentNode!.replaceChild(preEl, block);
+      const sel2 = window.getSelection()!;
+      const r2 = document.createRange();
+      r2.selectNodeContents(preEl);
+      r2.collapse(false);
+      sel2.removeAllRanges();
+      sel2.addRange(r2);
+      isInternal.current = true;
+      onChange?.(editor.innerHTML);
+      return true;
+    }
+
+    // ── Text alignment: [text-left], [text-center], [text-right], [text-justify] ──
+    const alignBlock =
+      /^\[(text-left|text-center|text-right|text-justify)\]([\s\S]*)\[\/\1\]$/.exec(
+        fullText.trim(),
+      );
+    if (alignBlock) {
+      const alignKey = alignBlock[1];
+      const content = alignBlock[2];
+      const alignClass = ALIGN_MAP[alignKey];
+      const div = document.createElement("div");
+      div.className = `ce-align-block ${alignClass}`;
+      div.contentEditable = "true";
+      div.dataset.alignType = alignKey;
+      div.textContent = content || "\u200B";
+      block.parentNode!.replaceChild(div, block);
+      const sel2 = window.getSelection()!;
+      const r2 = document.createRange();
+      r2.selectNodeContents(div);
+      r2.collapse(false);
+      sel2.removeAllRanges();
+      sel2.addRange(r2);
+      isInternal.current = true;
+      onChange?.(editor.innerHTML);
+      return true;
+    }
+
+    // ── Decimal ordered list ──
     const dm = /^(\d+)[.)]\s(.*)$/.exec(fullText);
     if (dm) {
       const num = parseInt(dm[1], 10),
@@ -1459,7 +1526,7 @@ export default function Editor({
         const parentEl = startContainer.parentElement;
         if (
           !parentEl?.closest(
-            ".ce-code-textarea,.ce-callout-body,.ce-callout-title,.ce-content",
+            ".ce-code-textarea,.ce-callout-body,.ce-callout-title,.ce-content,.ce-preline,.ce-align-block",
           )
         ) {
           const fullText = startContainer.textContent ?? "";
@@ -1579,6 +1646,42 @@ export default function Editor({
         (cb.querySelector(".ce-code-textarea") as HTMLElement)?.focus();
         emit();
       };
+
+      // ── NEW: insert pre-line block ──
+      const insertPrelineBlock = () => {
+        const preEl = document.createElement("div");
+        preEl.className = "ce-preline";
+        preEl.contentEditable = "true";
+        preEl.dataset.blockType = "preline";
+        preEl.textContent = "\u200B";
+        insertBlock(preEl);
+        const sel = window.getSelection()!;
+        const r = document.createRange();
+        r.selectNodeContents(preEl);
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+        emit();
+      };
+
+      // ── NEW: insert text alignment block ──
+      const insertAlignBlock = (alignKey: string) => {
+        const alignClass = ALIGN_MAP[alignKey] || "ce-align-left";
+        const div = document.createElement("div");
+        div.className = `ce-align-block ${alignClass}`;
+        div.contentEditable = "true";
+        div.dataset.alignType = alignKey;
+        div.textContent = "\u200B";
+        insertBlock(div);
+        const sel = window.getSelection()!;
+        const r = document.createRange();
+        r.selectNodeContents(div);
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+        emit();
+      };
+
       const getListContent = (): HTMLElement | null => {
         const sel = window.getSelection();
         if (!sel?.rangeCount) return null;
@@ -1729,38 +1832,67 @@ export default function Editor({
       const getCurNode = () =>
         window.getSelection()?.getRangeAt(0)
           ?.startContainer as HTMLElement | null;
+
       const closest = (
         node: HTMLElement | null,
         s: string,
-      ): HTMLElement | null =>
-        node?.nodeType === Node.ELEMENT_NODE
-          ? (node.closest?.(s) ?? null)
-          : (node?.parentElement?.closest(s) ?? null);
+      ): HTMLElement | null => {
+        if (!node) return null;
+        // textarea নিজে closest support করে, কিন্তু match নাও হতে পারে
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const direct = (node as HTMLElement).matches?.(s) ? node : null;
+          return direct ?? (node.closest?.(s) as HTMLElement | null) ?? null;
+        }
+        return (node?.parentElement?.closest(s) as HTMLElement | null) ?? null;
+      };
+
       const handleEscape = (): boolean => {
+        const activeEl = document.activeElement as HTMLElement | null;
+
+        if (activeEl?.classList.contains("ce-code-textarea")) {
+          e.preventDefault();
+          const codeBlock = activeEl.closest(".ce-code-block") as HTMLElement;
+          if (codeBlock) insertParagraphAfter(codeBlock);
+          return true;
+        }
+
         const node = getCurNode();
         const target =
-          closest(node, ".ce-code-textarea") ??
-          closest(node, ".ce-callout-body,.ce-callout-title");
+          closest(node, ".ce-callout-body") ??
+          closest(node, ".ce-callout-title") ??
+          closest(node, ".ce-preline") ??
+          closest(node, ".ce-align-block");
+
         if (target) {
           e.preventDefault();
-          insertParagraphAfter(target);
+          const topTarget =
+            (target.closest(".ce-callout") as HTMLElement) ?? target;
+          insertParagraphAfter(topTarget);
           return true;
         }
         return false;
       };
+
       const handleCodeBlockEnter = (): boolean => {
-        const node = getCurNode();
-        const cc = closest(node, ".ce-code-textarea");
-        if (!cc) return false;
+        // document.activeElement দিয়ে check করো
+        const activeEl = document.activeElement as HTMLElement | null;
+        const isInCodeTextarea =
+          activeEl?.classList.contains("ce-code-textarea");
+
+        if (!isInCodeTextarea) return false;
+
         if (e.shiftKey) {
           e.preventDefault();
-          const codeBlock = cc.closest(".ce-code-block") as HTMLElement;
-          insertParagraphAfter(codeBlock ?? cc);
+          const codeBlock = activeEl!.closest(".ce-code-block") as HTMLElement;
+          if (codeBlock) insertParagraphAfter(codeBlock);
           return true;
         }
+
+        // Regular Enter — textarea নিজেই handle করবে, শুধু emit
         requestAnimationFrame(() => emit());
         return true;
       };
+
       const handleCalloutEnter = (): boolean => {
         const node = getCurNode();
         const title = closest(node, ".ce-callout-title");
@@ -1784,7 +1916,8 @@ export default function Editor({
         if (!body) return false;
         if (e.shiftKey) {
           e.preventDefault();
-          insertParagraphAfter(body);
+          const callout = body.closest(".ce-callout") as HTMLElement;
+          insertParagraphAfter(callout ?? body);
           return true;
         }
         const bodyText =
@@ -1797,6 +1930,30 @@ export default function Editor({
         requestAnimationFrame(() => emit());
         return true;
       };
+      // ── NEW: handle Shift+Enter to exit pre-line / align blocks ──
+      const handlePrelineEnter = (): boolean => {
+        const node = getCurNode();
+        const pre = closest(node, ".ce-preline");
+        if (!pre) return false;
+        if (e.shiftKey) {
+          e.preventDefault();
+          insertParagraphAfter(pre);
+          return true;
+        }
+        return false;
+      };
+      const handleAlignBlockEnter = (): boolean => {
+        const node = getCurNode();
+        const ab = closest(node, ".ce-align-block");
+        if (!ab) return false;
+        if (e.shiftKey) {
+          e.preventDefault();
+          insertParagraphAfter(ab);
+          return true;
+        }
+        return false;
+      };
+
       if (e.key === "Escape") {
         handleEscape();
         return;
@@ -1808,6 +1965,8 @@ export default function Editor({
       if (e.key === "Enter") {
         if (handleCodeBlockEnter()) return;
         if (handleCalloutEnter()) return;
+        if (handlePrelineEnter()) return;
+        if (handleAlignBlockEnter()) return;
         if (handleListEnter()) return;
         const sel = window.getSelection();
         if (sel?.rangeCount) {
@@ -1825,6 +1984,7 @@ export default function Editor({
       if (e.key === "Backspace") {
         if (handleListBackspace()) return;
       }
+
       if (e.key === " ") {
         const sel = window.getSelection();
         if (!sel?.rangeCount) return;
@@ -1873,6 +2033,40 @@ export default function Editor({
             return;
           }
         }
+
+        // ── NEW: [pre] + Space triggers pre-line block ──
+        if (lineText === "[pre]") {
+          const block =
+            (startContainer as HTMLElement).closest?.(
+              "p,div,h1,h2,h3,h4,blockquote",
+            ) ?? startContainer.parentElement;
+          if (block?.textContent?.replace(/\u200B/g, "").trim() === "[pre]") {
+            e.preventDefault();
+            if (block) block.textContent = "";
+            insertPrelineBlock();
+            return;
+          }
+        }
+
+        // ── NEW: [text-left], [text-center], [text-right], [text-justify] + Space ──
+        const alignTrigger =
+          /^\[(text-left|text-center|text-right|text-justify)\]$/.exec(
+            lineText,
+          );
+        if (alignTrigger) {
+          const alignKey = alignTrigger[1];
+          const block =
+            (startContainer as HTMLElement).closest?.(
+              "p,div,h1,h2,h3,h4,blockquote",
+            ) ?? startContainer.parentElement;
+          if (block?.textContent?.replace(/\u200B/g, "").trim() === lineText) {
+            e.preventDefault();
+            if (block) block.textContent = "";
+            insertAlignBlock(alignKey);
+            return;
+          }
+        }
+
         const isRoman = /^(i{1,3}|iv|v|vi{0,3}|viii|ix|x)[.)]$/i.test(lineText);
         const isLowerAlpha =
           /^[a-z][.)]$/.test(lineText) && !/^(i|v|x)[.)]$/.test(lineText);
@@ -1965,7 +2159,6 @@ export default function Editor({
           <div>
             <code>!!text!!</code> → remove format
           </div>
-          {/* ★ Math shortcuts */}
           <div className="sc-head">Math (LaTeX)</div>
           <div>
             <code>$\frac{"{1}{2}"}$</code> → inline math
@@ -1991,6 +2184,29 @@ export default function Editor({
           </div>
           <div>
             <code>[!note]</code> + Space → callout
+          </div>
+          <div className="sc-head">New blocks (prefix + Space)</div>
+          <div>
+            <code>[pre]</code> + Space → pre-line block
+          </div>
+          <div>
+            <code>[text-left]</code> + Space → left align
+          </div>
+          <div>
+            <code>[text-center]</code> + Space → center
+          </div>
+          <div>
+            <code>[text-right]</code> + Space → right align
+          </div>
+          <div>
+            <code>[text-justify]</code> + Space → justify
+          </div>
+          <div className="sc-head">Block syntax (Enter to apply)</div>
+          <div>
+            <code>[pre]text[/pre]</code> → pre-line
+          </div>
+          <div>
+            <code>[text-center]...[/text-center]</code> → align
           </div>
           <div className="sc-head">Keys</div>
           <div>
