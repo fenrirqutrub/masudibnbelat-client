@@ -12,6 +12,7 @@ export interface Category {
 export interface BaseArticle {
   _id: string;
   title: string;
+  author?: string;
   description: string;
   slug: string;
   uniqueId: string;

@@ -6,11 +6,13 @@ import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosPublic } from "../../../hooks/axiosPublic";
+import Editor from "../Editor/Editor";
 
 interface ArticleFormData {
   category: string;
   img: FileList | null;
   title: string;
+  author: string;
   description: string;
 }
 
@@ -28,11 +30,18 @@ const AddArticle = () => {
 
   const { register, handleSubmit, reset, setValue, watch } =
     useForm<ArticleFormData>({
-      defaultValues: { category: "", img: null, title: "", description: "" },
+      defaultValues: {
+        category: "",
+        img: null,
+        title: "",
+        author: "",
+        description: "",
+      },
     });
 
   const catId = watch("category");
   const files = watch("img");
+  const description = watch("description");
 
   const { data: cats = [], isLoading } = useQuery<Category[]>({
     queryKey: ["categories"],
@@ -41,18 +50,24 @@ const AddArticle = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: (fd: FormData) =>
-      axiosPublic.post("/api/articles", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      }),
+    mutationFn: (fd: FormData) => axiosPublic.post("/api/articles", fd),
+
     onSuccess: () => {
       toast.success("Article created");
       qc.invalidateQueries({ queryKey: ["articles"] });
       reset();
       setPreview(null);
     },
-    onError: (err: any) =>
-      toast.error(err?.response?.data?.message || "Failed"),
+
+    onError: (err: unknown) => {
+      console.error("Full error:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message;
+      toast.error(message || "Failed");
+    },
   });
 
   useEffect(() => {
@@ -68,7 +83,6 @@ const AddArticle = () => {
     const file = fileList?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) return toast.error("Select an image");
-
     setValue("img", fileList);
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result as string);
@@ -78,25 +92,39 @@ const AddArticle = () => {
   const onSubmit: SubmitHandler<ArticleFormData> = (data) => {
     if (!data.img?.[0]) return toast.error("Image required");
     if (!data.category) return toast.error("Category required");
+    if (!data.description.trim()) return toast.error("Description required");
+    if (data.description.trim().length < 20)
+      return toast.error("Description must be at least 20 characters");
 
     const fd = new FormData();
     fd.append("title", data.title.trim());
     fd.append("description", data.description.trim());
+    fd.append("author", data.author.trim()); // ← NEW
     fd.append("img", data.img[0]);
     fd.append("categoryId", data.category);
 
     mutation.mutate(fd);
   };
 
-  // ─── Clean ready state ───
-  const canSubmit = Boolean(catId && files?.[0] && !mutation.isPending);
+  const getTextLength = (html: string) =>
+    html
+      .replace(/<[^>]*>/g, "")
+      .replace(/\u200B/g, "")
+      .trim().length;
+
+  const canSubmit = Boolean(
+    catId &&
+    files?.[0] &&
+    getTextLength(description) >= 20 &&
+    !mutation.isPending,
+  );
 
   return (
-    <div className="min-h-screen ">
-      <div className="">
+    <div className="min-h-screen">
+      <div>
         <h2 className="text-3xl font-bold text-center mb-8">Add New Article</h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className=" space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Category */}
           <div className="relative" ref={ref}>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
@@ -138,7 +166,9 @@ const AddArticle = () => {
                       setValue("category", c._id);
                       setDropdown(false);
                     }}
-                    className={`w-full px-4 py-2.5 text-left hover:bg-gray-100 dark:hover:bg-gray-600 ${catId === c._id ? "bg-blue-50 dark:bg-gray-600" : ""}`}
+                    className={`w-full px-4 py-2.5 text-left hover:bg-gray-100 dark:hover:bg-gray-600 ${
+                      catId === c._id ? "bg-blue-50 dark:bg-gray-600" : ""
+                    }`}
                   >
                     {c.name}
                   </button>
@@ -147,7 +177,7 @@ const AddArticle = () => {
             )}
           </div>
 
-          {/* Title + Description (shortened for brevity) */}
+          {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Title *
@@ -155,29 +185,43 @@ const AddArticle = () => {
             <input
               {...register("title", { required: true, minLength: 5 })}
               placeholder="Title"
-              className="w-full px-4 py-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
+          {/* Author */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Author
+            </label>
+            <input
+              {...register("author")}
+              placeholder="Author name (optional)"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Description *
             </label>
-            <textarea
-              {...register("description", { required: true, minLength: 20 })}
-              rows={5}
-              placeholder="Description..."
-              className="w-full px-4 py-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 resize-none"
+            <Editor
+              value={description}
+              onChange={(val) => setValue("description", val)}
+              placeholder="Write your description..."
+              rows={6}
+              disabled={mutation.isPending}
             />
           </div>
 
-          {/* Image – no required in register */}
+          {/* Image */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Image *
             </label>
             {!preview ? (
-              <label className="flex flex-col items-center justify-center h-56 border-2 border-dashed rounded-xl cursor-pointer hover:border-emerald-500">
+              <label className="flex flex-col items-center justify-center h-56 border-2 border-dashed rounded-xl cursor-pointer border-emerald-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                 <FiUpload className="text-4xl text-gray-400 mb-2" />
                 <span className="text-sm text-gray-600 dark:text-gray-300">
                   Upload image
@@ -215,16 +259,15 @@ const AddArticle = () => {
             <button
               type="submit"
               disabled={!canSubmit}
-              className={`flex-1 py-3 rounded-lg font-medium transition ${
+              className={`flex-1 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
                 canSubmit
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                   : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
-              } flex items-center justify-center gap-2`}
+              }`}
             >
               {mutation.isPending ? (
                 <>
-                  {" "}
-                  <Loader2 className="w-5 h-5 animate-spin" /> Creating…{" "}
+                  <Loader2 className="w-5 h-5 animate-spin" /> Creating…
                 </>
               ) : (
                 "Add Article"

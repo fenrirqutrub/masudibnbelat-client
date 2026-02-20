@@ -7,6 +7,7 @@ import {
   type FC,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { updateEditorTheme } from "../pages/Admin/Editor/Editor";
 
 type Theme = "light" | "dark";
 type Corner = "top-right" | "top-left" | "bottom-right" | "bottom-left";
@@ -91,6 +92,7 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Apply theme so Tailwind dark: classes work
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    updateEditorTheme(theme);
   }, [theme]);
 
   const toggleTheme = () => {

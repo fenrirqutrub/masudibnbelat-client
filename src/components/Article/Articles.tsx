@@ -9,6 +9,7 @@ import { SearchBar } from "../common/Searchbar";
 import type { Category } from "../../types/Article.types";
 import { Pagination } from "../common/Pagination";
 import { SearchX } from "lucide-react";
+import { stripHtml } from "../../utility/Formatters";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -50,7 +51,9 @@ const Articles = () => {
       filtered = filtered.filter(
         (article) =>
           article.title.toLowerCase().includes(search) ||
-          (article.description || "").toLowerCase().includes(search),
+          stripHtml(article.description || "")
+            .toLowerCase()
+            .includes(search),
       );
     }
 

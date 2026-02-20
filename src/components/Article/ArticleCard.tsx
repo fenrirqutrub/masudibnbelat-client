@@ -1,7 +1,7 @@
 import { Link } from "react-router"; // ← fixed import (most common)
 import { Eye, MessageCircle, Send, Clock } from "lucide-react";
 import type { BaseArticle } from "../../types/Article.types";
-import { truncateText } from "../../utility/Formatters";
+import { stripHtml, truncateText } from "../../utility/Formatters";
 
 // ────────────────────── HELPERS ──────────────────────
 
@@ -16,7 +16,8 @@ export interface ArticleCardProps {
 }
 
 export const ArticleCard = ({ article, categoryPath }: ArticleCardProps) => {
-  const readTime = calcReadTime(article.description);
+  const plainDesc = stripHtml(article.description);
+  const readTime = calcReadTime(plainDesc);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -88,7 +89,7 @@ export const ArticleCard = ({ article, categoryPath }: ArticleCardProps) => {
           </h3>
 
           <p className="text-sm text-textGray leading-relaxed mb-4 line-clamp-3 flex-1">
-            {truncateText(article.description, 150)}
+            {truncateText(stripHtml(article.description), 150)}
           </p>
 
           {/* Meta row: read time + "Read More" */}
