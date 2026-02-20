@@ -266,7 +266,6 @@ const BANGLA_LETTERS = [
   "স",
   "হ",
 ];
-
 function toLowerAlpha(n: number): string {
   let r = "";
   while (n > 0) {
@@ -751,7 +750,7 @@ function injectStyles() {
     .ce-code-block{position:relative;margin:8px 0;border-radius:8px;overflow:hidden;background:var(--ce-code-bg);border:1px solid var(--ce-code-border);font-family:'JetBrains Mono','Fira Code','Cascadia Code',monospace;font-size:13px;}
     .ce-code-header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--ce-code-header-bg);border-bottom:1px solid var(--ce-code-header-border);}
     .ce-code-lang{font-size:11px;color:var(--ce-code-lang-color);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;font-family:inherit;}
-    .ce-code-copy{font-size:11px;color:var(--ce-code-copy-color);background:transparent;border:1px solid var(--ce-code-copy-border);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all 0.15s;font-family:inherit;}
+    .ce-code-copy{font-size:11px;color:var(--ce-code-copy-color);background:transparent;border:1px solid var(--ce-code-copy-border);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all 0.15s;font-family:inherit;pointer-events:all;touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:28px;min-width:44px;}
     .ce-code-copy:hover{opacity:0.8;}
     .ce-code-copy.copied{color:#4ade80;border-color:rgba(74,222,128,0.4);}
     .ce-code-block *{box-sizing:border-box;}
@@ -764,11 +763,9 @@ function injectStyles() {
     .ce-callout-body{padding:10px 14px 12px 14px;outline:none;min-height:2em;line-height:1.7;font-size:14px;}
     .ce-callout-body[data-empty="true"]:before{content:attr(data-placeholder);color:rgba(255,255,255,0.25);pointer-events:none;}
     .ce-math-inline{display:inline;cursor:default;}
-    .ce-math-display{display:block;text-align:center;padding:12px 16px;margin:6px 0;background:rgba(99,102,241,0.07);border-radius:6px;border-left:3px solid rgba(99,102,241,0.4);cursor:default;}
-    /* ── Pre-line block ── */
+    .ce-math-display{display:block;text-align:center;padding:12px 16px;margin:6px 0;background:rgba(99,102,241,0.07);border-radius:6px;border-left:3px solid rgba(99,102,241,0.4);cursor:default;overflow-x:auto;-webkit-overflow-scrolling:touch;}
     .ce-preline{white-space:pre-line;font-family:inherit;margin:6px 0;padding:10px 14px;background:rgba(0,0,0,0.04);border-left:3px solid #6b7280;border-radius:0 4px 4px 0;line-height:1.7;outline:none;min-height:1.6em;}
     .dark .ce-preline,[data-theme="dark"] .ce-preline{background:rgba(255,255,255,0.04);}
-    /* ── Text alignment ── */
     .ce-align-left{text-align:left;}
     .ce-align-center{text-align:center;}
     .ce-align-right{text-align:right;}
@@ -780,7 +777,10 @@ function injectStyles() {
     .ce-shortcuts-body .sc-head{grid-column:1/-1;color:#6b7280;font-family:sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;}
     .ce-shortcuts-body code{background:rgba(255,255,255,0.07);border-radius:3px;padding:0 3px;}
     @media(max-width:600px){.ce-shortcuts-body{grid-template-columns:1fr;}}
-    @media(max-width:768px){.ce-editor{font-size:16px;-webkit-text-size-adjust:100%;}}
+    @media(max-width:768px){
+      .ce-editor{font-size:16px;-webkit-text-size-adjust:100%;}
+      .ce-code-block textarea.ce-code-textarea{font-size:14px !important;}
+    }
   `;
   document.head.appendChild(s);
 }
@@ -944,8 +944,12 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
     "cursor:pointer",
     "font-family:inherit",
     "pointer-events:all",
+    "touch-action:manipulation",
+    "-webkit-tap-highlight-color:transparent",
+    "min-height:28px",
+    "min-width:44px",
   ].join(";");
-  copyBtn.addEventListener("click", (e) => {
+  const doCopy = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
     const text = codeValue;
@@ -963,7 +967,9 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
         .then(done)
         .catch(() => fallbackCopy(text, done));
     else fallbackCopy(text, done);
-  });
+  };
+  copyBtn.addEventListener("click", doCopy, { passive: false });
+  copyBtn.addEventListener("touchend", doCopy, { passive: false });
   header.append(langLabel, copyBtn);
   const body = document.createElement("div");
   body.style.cssText = "display:flex;";
@@ -1008,6 +1014,8 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
   textarea.className = "ce-code-textarea";
   textarea.spellcheck = false;
   textarea.setAttribute("autocomplete", "off");
+  textarea.setAttribute("autocorrect", "off");
+  textarea.setAttribute("autocapitalize", "off");
   textarea.style.cssText = [
     "position:absolute",
     "inset:0",
@@ -1030,6 +1038,8 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
     "word-break:break-all",
     "overflow:hidden",
     "box-sizing:border-box",
+    "-webkit-user-select:text",
+    "user-select:text",
   ].join(";");
   const sync = () => {
     codeValue = textarea.value;
@@ -1052,7 +1062,9 @@ function buildCodeBlock(lang: string, code = ""): HTMLElement {
     });
   };
   if (code) textarea.value = code;
+  // Mobile: use both input and compositionend for IME/mobile keyboards
   textarea.addEventListener("input", sync);
+  textarea.addEventListener("compositionend", sync);
   textarea.addEventListener("keydown", (ev) => {
     if (ev.key === "Tab") {
       ev.preventDefault();
@@ -1121,13 +1133,16 @@ function restoreCursorOffset(container: HTMLElement, offset: number) {
   sel.addRange(r);
 }
 
-// ─── TEXT ALIGNMENT HELPERS ──────────────────────────────────────────────────
-
 const ALIGN_MAP: Record<string, string> = {
   "text-left": "ce-align-left",
   "text-center": "ce-align-center",
   "text-right": "ce-align-right",
   "text-justify": "ce-align-justify",
+  // Short aliases
+  left: "ce-align-left",
+  center: "ce-align-center",
+  right: "ce-align-right",
+  justify: "ce-align-justify",
 };
 
 export default function Editor({
@@ -1141,6 +1156,8 @@ export default function Editor({
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternal = useRef(false);
   const initialized = useRef(false);
+  const isComposing = useRef(false);
+  const handleInputRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     injectStyles();
@@ -1215,7 +1232,6 @@ export default function Editor({
         isInternal.current = true;
         onChange?.(editor.innerHTML);
       };
-
       if (typed.endsWith("~~")) {
         const m = /~~([^~\n]+)~~$/.exec(typed);
         if (m) {
@@ -1313,11 +1329,49 @@ export default function Editor({
       if (typed.endsWith("$") && !typed.endsWith("$$")) {
         const m = /(?<!\$)\$([^$\n]+)\$$/.exec(typed);
         if (m) {
-          commitHTML(
-            typed.length - m[0].length,
-            offset,
-            renderMathInline(m[1]),
-          );
+          const expr = m[1];
+          // Render immediately with KaTeX if available, else placeholder
+          const win = window as typeof window & {
+            katex?: { renderToString: (e: string, o: object) => string };
+          };
+          let renderedHTML: string;
+          if (win.katex) {
+            try {
+              const katexHTML = win.katex.renderToString(expr, {
+                displayMode: false,
+                throwOnError: false,
+              });
+              const span = document.createElement("span");
+              span.className = "ce-math-inline";
+              span.dataset.math = encodeURIComponent(expr);
+              span.dataset.katexDone = "1";
+              span.innerHTML = katexHTML;
+              // Use direct DOM insertion for instant render
+              const before = document.createTextNode(
+                fullText.slice(0, typed.length - m[0].length),
+              );
+              const after = document.createTextNode(
+                fullText.slice(offset) + "\u200B",
+              );
+              const parent = textNode.parentNode!;
+              parent.replaceChild(after, textNode);
+              parent.insertBefore(span, after);
+              parent.insertBefore(before, span);
+              const sel = window.getSelection()!;
+              const r = document.createRange();
+              r.setStart(after, 1);
+              r.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(r);
+              isInternal.current = true;
+              onChange?.(editor.innerHTML);
+              return true;
+            } catch {
+              /* fall through to placeholder */
+            }
+          }
+          renderedHTML = renderMathInline(expr);
+          commitHTML(typed.length - m[0].length, offset, renderedHTML);
           return true;
         }
       }
@@ -1359,8 +1413,6 @@ export default function Editor({
     ) as HTMLElement | null;
     if (!block || block === editor || !editor.contains(block)) return false;
     const fullText = block.textContent?.replace(/\u200B/g, "") ?? "";
-
-    // ── Heading ──
     const hm = /^(#{1,4}) (.*)$/.exec(fullText);
     if (hm) {
       const level = hm[1].length,
@@ -1374,7 +1426,6 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
-    // ── Blockquote ──
     const bq = /^> (.*)$/.exec(fullText);
     if (bq) {
       const rawOff = saveCursorOffset(block);
@@ -1386,7 +1437,6 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
-    // ── Bullet list ──
     const bl = /^[*-] (.*)$/.exec(fullText);
     if (bl) {
       const rawOff = saveCursorOffset(block);
@@ -1412,8 +1462,6 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
-
-    // ── [math] display block ──
     const mathBlock = /^\[math\]([\s\S]+)\[\/math\]$/.exec(fullText.trim());
     if (mathBlock) {
       const expr = mathBlock[1];
@@ -1421,7 +1469,23 @@ export default function Editor({
       mathEl.className = "ce-math-display";
       mathEl.contentEditable = "false";
       mathEl.dataset.math = encodeURIComponent(expr);
-      mathEl.innerHTML = renderMathDisplay(expr);
+      // Render immediately with KaTeX if available
+      const win = window as typeof window & {
+        katex?: { renderToString: (e: string, o: object) => string };
+      };
+      if (win.katex) {
+        try {
+          mathEl.innerHTML = win.katex.renderToString(expr, {
+            displayMode: true,
+            throwOnError: false,
+          });
+          mathEl.dataset.katexDone = "1";
+        } catch {
+          mathEl.innerHTML = renderMathDisplay(expr);
+        }
+      } else {
+        mathEl.innerHTML = renderMathDisplay(expr);
+      }
       block.parentNode!.replaceChild(mathEl, block);
       const p = document.createElement("p");
       p.innerHTML = "<br>";
@@ -1436,8 +1500,6 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
-
-    // ── [pre]...[/pre] pre-line block ──
     const preBlock = /^\[pre\]([\s\S]*)\[\/pre\]$/.exec(fullText.trim());
     if (preBlock) {
       const content = preBlock[1];
@@ -1457,10 +1519,8 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
-
-    // ── Text alignment: [text-left], [text-center], [text-right], [text-justify] ──
     const alignBlock =
-      /^\[(text-left|text-center|text-right|text-justify)\]([\s\S]*)\[\/\1\]$/.exec(
+      /^\[(text-left|text-center|text-right|text-justify|left|center|right|justify)\]([\s\S]*)\[\/\1\]$/.exec(
         fullText.trim(),
       );
     if (alignBlock) {
@@ -1483,8 +1543,6 @@ export default function Editor({
       onChange?.(editor.innerHTML);
       return true;
     }
-
-    // ── Decimal ordered list ──
     const dm = /^(\d+)[.)]\s(.*)$/.exec(fullText);
     if (dm) {
       const num = parseInt(dm[1], 10),
@@ -1517,6 +1575,7 @@ export default function Editor({
   }, [onChange]);
 
   const handleInput = useCallback(() => {
+    if (isComposing.current) return;
     const sel = window.getSelection();
     if (sel?.rangeCount) {
       const { startContainer, startOffset } = sel.getRangeAt(0);
@@ -1535,6 +1594,307 @@ export default function Editor({
     if (tryBlockFormat()) return;
     emit();
   }, [tryInlineSyntax, tryBlockFormat, emit]);
+
+  // Keep ref updated so native listeners use latest version
+  useEffect(() => {
+    handleInputRef.current = handleInput;
+  }, [handleInput]);
+
+  // Mobile IME composition handlers
+  const handleCompositionStart = useCallback(() => {
+    isComposing.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    isComposing.current = false;
+    handleInput();
+  }, [handleInput]);
+
+  // ── Mobile space-trigger via native beforeinput ──────────────────────────
+  // Mobile browsers often skip keydown for Space; beforeinput fires reliably.
+  const tryMobileSpaceTrigger = useCallback(() => {
+    if (isComposing.current) return false;
+    const sel = window.getSelection();
+    if (!sel?.rangeCount) return false;
+    const { startContainer, startOffset } = sel.getRangeAt(0);
+    if (startContainer.nodeType !== Node.TEXT_NODE) return false;
+    const lineText = (startContainer.textContent ?? "").slice(0, startOffset);
+    if (!lineText.trim()) return false;
+
+    const editor = editorRef.current!;
+
+    // Don't trigger inside special blocks
+    const parentEl = startContainer.parentElement;
+    if (
+      parentEl?.closest(
+        ".ce-code-textarea,.ce-callout-body,.ce-callout-title,.ce-content,.ce-preline,.ce-align-block",
+      )
+    )
+      return false;
+
+    const getBlock = () =>
+      (startContainer as HTMLElement).closest?.(
+        "p,div,h1,h2,h3,h4,blockquote",
+      ) ?? startContainer.parentElement;
+
+    const buildLi = (type: ListType, n: number): HTMLLIElement => {
+      const li = document.createElement("li");
+      li.dataset.index = String(n);
+      const marker = document.createElement("span");
+      marker.className = "ce-marker";
+      marker.contentEditable = "false";
+      const markerText = (
+        {
+          decimal: `${n}.`,
+          "lower-alpha": `${toLowerAlpha(n)}.`,
+          "upper-alpha": `${toUpperAlpha(n)}.`,
+          "lower-roman": `${toRoman(n)}.`,
+          bangla: `${toBangla(n)}.`,
+          bullet: "•",
+        } as Record<string, string>
+      )[type];
+      marker.textContent = markerText;
+      const content = document.createElement("span");
+      content.className = "ce-content";
+      content.contentEditable = "true";
+      content.innerHTML = "\u200B";
+      li.append(marker, content);
+      return li;
+    };
+    const buildListEl = (type: ListType): HTMLElement => {
+      const ol = document.createElement(type === "bullet" ? "ul" : "ol");
+      ol.className = `ce-list${type === "bullet" ? " ce-bullet" : ""}`;
+      ol.dataset.listType = type;
+      ol.dataset.counter = "1";
+      return ol;
+    };
+
+    const getTopBlock = (node: Node): Node | null => {
+      let cur: Node = node;
+      while (cur.parentNode && cur.parentNode !== editor) cur = cur.parentNode;
+      return cur.parentNode === editor ? cur : null;
+    };
+    const insertBlockEl = (el: HTMLElement) => {
+      const topBlock = getTopBlock(startContainer);
+      if (topBlock?.parentNode) topBlock.parentNode.replaceChild(el, topBlock);
+      else editor.appendChild(el);
+    };
+
+    const doInsertList = (type: ListType) => {
+      const listEl = buildListEl(type);
+      listEl.dataset.counter = "2";
+      const li = buildLi(type, 1);
+      listEl.appendChild(li);
+      insertBlockEl(listEl);
+      const ct = li.querySelector(".ce-content")!;
+      const s = window.getSelection()!;
+      const r = document.createRange();
+      r.selectNodeContents(ct);
+      r.collapse(false);
+      s.removeAllRanges();
+      s.addRange(r);
+      emit();
+    };
+
+    const doInsertCallout = (type: string) => {
+      const cfg = CALLOUT_TYPES[type] ?? CALLOUT_TYPES.note;
+      const wrapper = document.createElement("div");
+      wrapper.className = "ce-callout";
+      wrapper.dataset.calloutType = type;
+      wrapper.style.cssText = `border-left-color:${cfg.borderColor};`;
+      const header = document.createElement("div");
+      header.className = "ce-callout-header";
+      header.style.cssText = `background:${cfg.headerBg};color:${cfg.titleColor};`;
+      const icon = document.createElement("span");
+      icon.className = "ce-callout-icon";
+      icon.contentEditable = "false";
+      icon.textContent = cfg.icon;
+      const title = document.createElement("span");
+      title.className = "ce-callout-title";
+      title.contentEditable = "true";
+      title.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      const fold = document.createElement("span");
+      fold.className = "ce-callout-fold";
+      fold.contentEditable = "false";
+      fold.textContent = "▾";
+      header.append(icon, title, fold);
+      const body = document.createElement("div");
+      body.className = "ce-callout-body";
+      body.contentEditable = "true";
+      body.style.cssText = `background:${cfg.bodyBg};color:inherit;`;
+      body.dataset.placeholder = "Callout content...";
+      body.innerHTML = "\u200B";
+      fold.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const folded = body.style.display === "none";
+        body.style.display = folded ? "" : "none";
+        fold.classList.toggle("folded", !folded);
+      });
+      wrapper.append(header, body);
+      insertBlockEl(wrapper);
+      const s = window.getSelection()!;
+      const r = document.createRange();
+      r.setStart(body, 0);
+      r.collapse(true);
+      s.removeAllRanges();
+      s.addRange(r);
+      emit();
+    };
+
+    const doInsertCodeBlock = (lang: string) => {
+      const cb = buildCodeBlock(lang);
+      insertBlockEl(cb);
+      (cb.querySelector(".ce-code-textarea") as HTMLElement)?.focus();
+      emit();
+    };
+
+    const block = getBlock();
+    const blockText = block?.textContent?.replace(/\u200B/g, "").trim() ?? "";
+    if (blockText !== lineText) return false; // Not at start of line
+
+    // Callout: [!note] etc
+    const cm = /^\[!([a-z]+)\]$/.exec(lineText);
+    if (cm && CALLOUT_TYPES[cm[1]]) {
+      if (block) block.textContent = "";
+      doInsertCallout(cm[1]);
+      return true;
+    }
+
+    // Code block: ```lang
+    const cbm = /^```([a-zA-Z0-9]*)$/.exec(lineText);
+    if (cbm) {
+      if (block) block.textContent = "";
+      doInsertCodeBlock(cbm[1] || "text");
+      return true;
+    }
+
+    // [pre]
+    if (lineText === "[pre]") {
+      if (block) block.textContent = "";
+      const preEl = document.createElement("div");
+      preEl.className = "ce-preline";
+      preEl.contentEditable = "true";
+      preEl.dataset.blockType = "preline";
+      preEl.textContent = "\u200B";
+      insertBlockEl(preEl);
+      const s = window.getSelection()!;
+      const r = document.createRange();
+      r.selectNodeContents(preEl);
+      r.collapse(false);
+      s.removeAllRanges();
+      s.addRange(r);
+      emit();
+      return true;
+    }
+
+    // Text alignment — apply to current paragraph, don't create new block
+    const at =
+      /^\[(text-left|text-center|text-right|text-justify|left|center|right|justify)\]$/.exec(
+        lineText,
+      );
+    if (at) {
+      const alignKey = at[1];
+      const alignMap: Record<string, string> = {
+        left: "left",
+        "text-left": "left",
+        center: "center",
+        "text-center": "center",
+        right: "right",
+        "text-right": "right",
+        justify: "justify",
+        "text-justify": "justify",
+      };
+      const alignValue = alignMap[alignKey] || "left";
+      if (block) {
+        // Remove the trigger text and apply alignment to current block
+        block.textContent = "\u200B";
+        (block as HTMLElement).style.textAlign = alignValue;
+        (block as HTMLElement).dataset.alignValue = alignValue;
+        const s = window.getSelection()!;
+        const r = document.createRange();
+        r.selectNodeContents(block);
+        r.collapse(false);
+        s.removeAllRanges();
+        s.addRange(r);
+      }
+      emit();
+      return true;
+    }
+
+    // Headings and formatting
+    const formattingMap: Record<string, [string, string]> = {
+      "**": ["bold", ""],
+      _: ["italic", ""],
+      __: ["underline", ""],
+      "~~": ["strikeThrough", ""],
+      "####": ["formatBlock", "<h4>"],
+      "###": ["formatBlock", "<h3>"],
+      "##": ["formatBlock", "<h2>"],
+      "#": ["formatBlock", "<h1>"],
+      ">": ["formatBlock", "<blockquote>"],
+    };
+    for (const [trigger, [cmd, val]] of Object.entries(formattingMap)) {
+      if (lineText === trigger) {
+        if (block) block.textContent = "";
+        document.execCommand(cmd, false, val || undefined);
+        emit();
+        return true;
+      }
+    }
+
+    // Lists
+    const isRoman = /^(i{1,3}|iv|v|vi{0,3}|viii|ix|x)[.)]$/i.test(lineText);
+    const isLowerAlpha =
+      /^[a-z][.)]$/.test(lineText) && !/^(i|v|x)[.)]$/.test(lineText);
+    if (lineText === "*" || lineText === "-") {
+      if (block) block.textContent = "";
+      doInsertList("bullet");
+      return true;
+    }
+    if (/^\d+[.)]$/.test(lineText)) {
+      if (block) block.textContent = "";
+      doInsertList("decimal");
+      return true;
+    }
+    if (isLowerAlpha) {
+      if (block) block.textContent = "";
+      doInsertList("lower-alpha");
+      return true;
+    }
+    if (/^[A-Z][.)]$/.test(lineText)) {
+      if (block) block.textContent = "";
+      doInsertList("upper-alpha");
+      return true;
+    }
+    if (isRoman) {
+      if (block) block.textContent = "";
+      doInsertList("lower-roman");
+      return true;
+    }
+    if (/^[\u0995-\u09B9\u09CE\u09DC\u09DD\u09DF][.)]$/.test(lineText)) {
+      if (block) block.textContent = "";
+      doInsertList("bangla");
+      return true;
+    }
+
+    return false;
+  }, [emit]);
+
+  // Attach native beforeinput listener for mobile space detection
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const onBeforeInput = (e: InputEvent) => {
+      if (e.inputType === "insertText" && e.data === " ") {
+        if (tryMobileSpaceTrigger()) {
+          e.preventDefault();
+        }
+      }
+    };
+    el.addEventListener("beforeinput", onBeforeInput as EventListener);
+    return () =>
+      el.removeEventListener("beforeinput", onBeforeInput as EventListener);
+  }, [tryMobileSpaceTrigger]);
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
@@ -1644,8 +2004,6 @@ export default function Editor({
         (cb.querySelector(".ce-code-textarea") as HTMLElement)?.focus();
         emit();
       };
-
-      // ── NEW: insert pre-line block ──
       const insertPrelineBlock = () => {
         const preEl = document.createElement("div");
         preEl.className = "ce-preline";
@@ -1661,25 +2019,6 @@ export default function Editor({
         sel.addRange(r);
         emit();
       };
-
-      // ── NEW: insert text alignment block ──
-      const insertAlignBlock = (alignKey: string) => {
-        const alignClass = ALIGN_MAP[alignKey] || "ce-align-left";
-        const div = document.createElement("div");
-        div.className = `ce-align-block ${alignClass}`;
-        div.contentEditable = "true";
-        div.dataset.alignType = alignKey;
-        div.textContent = "\u200B";
-        insertBlock(div);
-        const sel = window.getSelection()!;
-        const r = document.createRange();
-        r.selectNodeContents(div);
-        r.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(r);
-        emit();
-      };
-
       const getListContent = (): HTMLElement | null => {
         const sel = window.getSelection();
         if (!sel?.rangeCount) return null;
@@ -1830,37 +2169,31 @@ export default function Editor({
       const getCurNode = () =>
         window.getSelection()?.getRangeAt(0)
           ?.startContainer as HTMLElement | null;
-
       const closest = (
         node: HTMLElement | null,
         s: string,
       ): HTMLElement | null => {
         if (!node) return null;
-        // textarea নিজে closest support করে, কিন্তু match নাও হতে পারে
         if (node.nodeType === Node.ELEMENT_NODE) {
           const direct = (node as HTMLElement).matches?.(s) ? node : null;
           return direct ?? (node.closest?.(s) as HTMLElement | null) ?? null;
         }
         return (node?.parentElement?.closest(s) as HTMLElement | null) ?? null;
       };
-
       const handleEscape = (): boolean => {
         const activeEl = document.activeElement as HTMLElement | null;
-
         if (activeEl?.classList.contains("ce-code-textarea")) {
           e.preventDefault();
           const codeBlock = activeEl.closest(".ce-code-block") as HTMLElement;
           if (codeBlock) insertParagraphAfter(codeBlock);
           return true;
         }
-
         const node = getCurNode();
         const target =
           closest(node, ".ce-callout-body") ??
           closest(node, ".ce-callout-title") ??
           closest(node, ".ce-preline") ??
           closest(node, ".ce-align-block");
-
         if (target) {
           e.preventDefault();
           const topTarget =
@@ -1870,27 +2203,18 @@ export default function Editor({
         }
         return false;
       };
-
       const handleCodeBlockEnter = (): boolean => {
-        // document.activeElement দিয়ে check করো
         const activeEl = document.activeElement as HTMLElement | null;
-        const isInCodeTextarea =
-          activeEl?.classList.contains("ce-code-textarea");
-
-        if (!isInCodeTextarea) return false;
-
+        if (!activeEl?.classList.contains("ce-code-textarea")) return false;
         if (e.shiftKey) {
           e.preventDefault();
           const codeBlock = activeEl!.closest(".ce-code-block") as HTMLElement;
           if (codeBlock) insertParagraphAfter(codeBlock);
           return true;
         }
-
-        // Regular Enter — textarea নিজেই handle করবে, শুধু emit
         requestAnimationFrame(() => emit());
         return true;
       };
-
       const handleCalloutEnter = (): boolean => {
         const node = getCurNode();
         const title = closest(node, ".ce-callout-title");
@@ -1928,7 +2252,6 @@ export default function Editor({
         requestAnimationFrame(() => emit());
         return true;
       };
-      // ── NEW: handle Shift+Enter to exit pre-line / align blocks ──
       const handlePrelineEnter = (): boolean => {
         const node = getCurNode();
         const pre = closest(node, ".ce-preline");
@@ -1982,7 +2305,6 @@ export default function Editor({
       if (e.key === "Backspace") {
         if (handleListBackspace()) return;
       }
-
       if (e.key === " ") {
         const sel = window.getSelection();
         if (!sel?.rangeCount) return;
@@ -2031,8 +2353,6 @@ export default function Editor({
             return;
           }
         }
-
-        // ── NEW: [pre] + Space triggers pre-line block ──
         if (lineText === "[pre]") {
           const block =
             (startContainer as HTMLElement).closest?.(
@@ -2045,26 +2365,41 @@ export default function Editor({
             return;
           }
         }
-
-        // ── NEW: [text-left], [text-center], [text-right], [text-justify] + Space ──
         const alignTrigger =
-          /^\[(text-left|text-center|text-right|text-justify)\]$/.exec(
+          /^\[(text-left|text-center|text-right|text-justify|left|center|right|justify)\]$/.exec(
             lineText,
           );
         if (alignTrigger) {
-          const alignKey = alignTrigger[1];
           const block =
             (startContainer as HTMLElement).closest?.(
               "p,div,h1,h2,h3,h4,blockquote",
-            ) ?? startContainer.parentElement;
+            ) ?? (startContainer.parentElement as HTMLElement | null);
           if (block?.textContent?.replace(/\u200B/g, "").trim() === lineText) {
             e.preventDefault();
-            if (block) block.textContent = "";
-            insertAlignBlock(alignKey);
+            const alignMap: Record<string, string> = {
+              left: "left",
+              "text-left": "left",
+              center: "center",
+              "text-center": "center",
+              right: "right",
+              "text-right": "right",
+              justify: "justify",
+              "text-justify": "justify",
+            };
+            const alignValue = alignMap[alignTrigger[1]] || "left";
+            block.textContent = "\u200B";
+            (block as HTMLElement).style.textAlign = alignValue;
+            (block as HTMLElement).dataset.alignValue = alignValue;
+            const sel2 = window.getSelection()!;
+            const r2 = document.createRange();
+            r2.selectNodeContents(block);
+            r2.collapse(false);
+            sel2.removeAllRanges();
+            sel2.addRange(r2);
+            emit();
             return;
           }
         }
-
         const isRoman = /^(i{1,3}|iv|v|vi{0,3}|viii|ix|x)[.)]$/i.test(lineText);
         const isLowerAlpha =
           /^[a-z][.)]$/.test(lineText) && !/^(i|v|x)[.)]$/.test(lineText);
@@ -2111,6 +2446,8 @@ export default function Editor({
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         data-placeholder={placeholder}
         style={{
           minHeight: `${rows * 1.6}em`,
@@ -2188,23 +2525,16 @@ export default function Editor({
             <code>[pre]</code> + Space → pre-line block
           </div>
           <div>
-            <code>[text-left]</code> + Space → left align
+            <code>[left]</code> + Space → left align
           </div>
           <div>
-            <code>[text-center]</code> + Space → center
+            <code>[center]</code> + Space → center align
           </div>
           <div>
-            <code>[text-right]</code> + Space → right align
+            <code>[right]</code> + Space → right align
           </div>
           <div>
-            <code>[text-justify]</code> + Space → justify
-          </div>
-          <div className="sc-head">Block syntax (Enter to apply)</div>
-          <div>
-            <code>[pre]text[/pre]</code> → pre-line
-          </div>
-          <div>
-            <code>[text-center]...[/text-center]</code> → align
+            <code>[justify]</code> + Space → justify
           </div>
           <div className="sc-head">Keys</div>
           <div>

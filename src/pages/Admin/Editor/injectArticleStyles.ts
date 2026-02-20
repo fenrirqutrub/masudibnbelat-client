@@ -2,7 +2,7 @@ let injected = false;
 
 export function injectArticleStyles() {
   if (injected) return;
-  injected = false;
+  injected = true; // ← BUG FIX: was `false`, styles were never actually injected
   const s = document.createElement("style");
   s.textContent = `
     :root {
@@ -50,23 +50,21 @@ export function injectArticleStyles() {
     .ce-indent-5{margin-left:10em!important}.ce-indent-6{margin-left:12em!important}
     .ce-indent-7{margin-left:14em!important}.ce-indent-8{margin-left:16em!important}
 
-    /* ── Code block base ── */
+    /* ── Code block ── */
     .ce-code-block{
       position:relative;margin:8px 0;border-radius:8px;overflow:hidden;
       background:var(--ce-code-bg);border:1px solid var(--ce-code-border);
       font-family:'JetBrains Mono','Fira Code','Cascadia Code',monospace;
-      /* Mobile: allow horizontal scroll */
       max-width:100%;
     }
     .ce-code-header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--ce-code-header-bg);border-bottom:1px solid var(--ce-code-header-border)}
     .ce-code-lang{font-size:11px;color:var(--ce-code-lang-color);text-transform:uppercase;letter-spacing:.1em;font-weight:600;font-family:inherit}
 
-    /* ── Copy button – MUST work on touch ── */
+    /* ── Copy button – mobile friendly ── */
     .ce-code-copy{
       font-size:11px;color:var(--ce-code-copy-color);background:transparent;
       border:1px solid var(--ce-code-copy-border);border-radius:4px;
       padding:4px 10px;cursor:pointer;transition:all .15s;font-family:inherit;
-      /* Critical for mobile: ensure touch events fire */
       pointer-events:all !important;
       touch-action:manipulation;
       -webkit-tap-highlight-color:transparent;
@@ -78,7 +76,7 @@ export function injectArticleStyles() {
       min-width:44px;
     }
     .ce-code-copy:hover{opacity:.8}
-    .ce-code-copy:active{opacity:.6}
+    .ce-code-copy:active{opacity:.6;transform:scale(0.97)}
     .ce-code-copy.copied{color:#4ade80!important;border-color:rgba(74,222,128,.4)!important}
 
     .ce-code-body{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -90,20 +88,13 @@ export function injectArticleStyles() {
     }
     .ce-code-gutter-line{display:block;padding:0 10px 0 14px;text-align:right;color:var(--ce-line-num-color);font-size:12px;line-height:1.7;min-height:1.7em}
     .ce-code-content{flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.ce-code-pre {
-  margin:0; padding:10px 16px; font-size:13px; line-height:1.7; tab-size:2;
-  font-family:inherit; color:var(--ce-code-text); background:transparent;
-  white-space: pre; 
-  overflow-x: auto;
-}
+    .ce-code-pre{
+      margin:0;padding:10px 16px;font-size:13px;line-height:1.7;tab-size:2;
+      font-family:inherit;color:var(--ce-code-text);background:transparent;
+      white-space:pre;overflow-x:auto;
+    }
+    .ce-code-line{display:inline;min-height:1.7em}
 
-
-.ce-code-line {
-  display: inline;  
-  min-height: 1.7em;
-}
-
-    /* Mobile code font size */
     @media (max-width: 640px) {
       .ce-code-pre{font-size:12px;padding:8px 12px}
       .ce-code-gutter-line{font-size:11px}
@@ -115,13 +106,14 @@ export function injectArticleStyles() {
     .article-body .ce-code-copy{pointer-events:all!important;cursor:pointer!important;touch-action:manipulation!important}
     .article-body .ce-callout-fold{display:none!important}
 
+    /* ── Callout ── */
     .ce-callout{margin:8px 0;border-radius:6px;overflow:hidden;border-left-width:4px;border-left-style:solid;border-top:none;border-right:none;border-bottom:none}
     .ce-callout-header{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:700;font-size:14px;letter-spacing:.01em}
     .ce-callout-icon{font-size:15px;line-height:1;flex-shrink:0}
     .ce-callout-title{flex:1}
     .ce-callout-body{padding:10px 14px 12px 14px;min-height:2em;line-height:1.7;font-size:14px}
 
-    /* ── Math – mobile responsive ── */
+    /* ── Math ── */
     .ce-math-inline{
       display:inline;
       font-family:'STIX Two Math','Latin Modern Math',serif;
@@ -140,7 +132,6 @@ export function injectArticleStyles() {
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
     }
-    /* KaTeX responsive on small screens */
     .katex-display{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:4px 0}
     .katex{font-size:1em!important}
     @media (max-width:640px){
@@ -161,7 +152,6 @@ export function injectArticleStyles() {
     .ce-align-block{margin:2px 0;min-height:1.4em}
     .article-body .ce-align-block{outline:none;pointer-events:none;user-select:text}
 
-    /* ── Article card math preview ── */
     .article-card-math .katex,.article-card-math .ce-math-inline,.article-card-math .ce-math-display{
       font-size:0.85em;background:transparent;border:none;padding:0;display:inline;
     }
@@ -603,7 +593,6 @@ function performCopy(text: string, btn: HTMLButtonElement): void {
     }
     document.body.removeChild(ta);
   };
-
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text).then(onSuccess, onFail);
   } else {
@@ -626,7 +615,6 @@ function buildStaticBlock(lang: string, rawCode: string): HTMLElement {
   copyBtn.type = "button";
   copyBtn.textContent = "Copy";
 
-  // Use both click and touchend for maximum mobile compatibility
   const handleCopy = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
@@ -651,13 +639,11 @@ function buildStaticBlock(lang: string, rawCode: string): HTMLElement {
   const pre = document.createElement("pre");
   pre.className = "ce-code-pre";
 
-  // নতুন কোড:
   lines.forEach((line, i) => {
     const el = document.createElement("span");
     el.className = "ce-code-line";
     el.innerHTML = highlightCode(line, lang) || "\u00A0";
     pre.appendChild(el);
-    // শেষ line ছাড়া সবার পরে newline যোগ করুন
     if (i < lines.length - 1) {
       pre.appendChild(document.createTextNode("\n"));
     }
@@ -683,7 +669,6 @@ export function processArticleCodeBlocks(container: HTMLElement): void {
     const lang = block.dataset.codeLang ?? "text";
 
     if (block.dataset.processed === "true") {
-      // Re-attach copy button handlers (they're lost on re-render)
       const savedCode = block.dataset.codeText ?? "";
       const copyBtn = block.querySelector<HTMLButtonElement>(".ce-code-copy");
       if (copyBtn) {
@@ -701,13 +686,10 @@ export function processArticleCodeBlocks(container: HTMLElement): void {
     }
 
     let rawCode = "";
-
-    // এভাবে করুন:
     const highlighted = block.querySelector<HTMLElement>(
       "pre code.ce-code-highlighted",
     );
     if (highlighted) {
-      // প্রতিটা line div আলাদাভাবে নিয়ে \n দিয়ে join করুন
       const lineDivs = highlighted.querySelectorAll<HTMLElement>("div");
       if (lineDivs.length > 0) {
         rawCode = Array.from(lineDivs)
@@ -729,13 +711,11 @@ export function processArticleCodeBlocks(container: HTMLElement): void {
     block.replaceWith(buildStaticBlock(lang, rawCode));
   });
 
-  // Make pre-line blocks read-only in article view
   container.querySelectorAll<HTMLElement>(".ce-preline").forEach((el) => {
     el.removeAttribute("contenteditable");
     el.textContent = (el.textContent ?? "").replace(/\u200B/g, "");
   });
 
-  // Make align blocks read-only in article view
   container.querySelectorAll<HTMLElement>(".ce-align-block").forEach((el) => {
     el.removeAttribute("contenteditable");
     el.textContent = (el.textContent ?? "").replace(/\u200B/g, "");
@@ -852,19 +832,13 @@ export function applyArticleTheme(): void {
   });
 }
 
-/**
- * Observe theme changes on html element and auto-apply code block theme.
- * Call once on mount to keep mobile theme switches in sync.
- */
 export function watchThemeChanges(): () => void {
   if (themeObserver) {
     themeObserver.disconnect();
     themeObserver = null;
   }
 
-  themeObserver = new MutationObserver(() => {
-    applyArticleTheme();
-  });
+  themeObserver = new MutationObserver(() => applyArticleTheme());
 
   themeObserver.observe(document.documentElement, {
     attributes: true,
@@ -875,7 +849,6 @@ export function watchThemeChanges(): () => void {
     attributeFilter: ["class", "data-theme", "data-color-scheme"],
   });
 
-  // Also listen to prefers-color-scheme media query changes
   const mq = window.matchMedia("(prefers-color-scheme: dark)");
   const mqHandler = () => applyArticleTheme();
   mq.addEventListener("change", mqHandler);
