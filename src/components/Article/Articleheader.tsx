@@ -2,7 +2,6 @@ import { Calendar, UserRound, MessageCircle, Eye, Send } from "lucide-react";
 import type { BaseArticle } from "../../types/Article.types";
 import { formatDate, formatTimeAgo } from "../../utility/Formatters";
 import { useEffect } from "react";
-import parse, { Element } from "html-react-parser";
 import {
   applyArticleTheme,
   injectArticleStyles,
@@ -34,23 +33,31 @@ export const ArticleHeader = ({
     injectArticleStyles();
     applyArticleTheme();
 
-    // Start watching theme changes (returns cleanup fn)
     const stopWatching = watchThemeChanges();
 
-    const processContent = () => {
+    const processContent = async () => {
       const articleBody = document.querySelector<HTMLElement>(".article-body");
       if (!articleBody) return;
+
       processArticleCodeBlocks(articleBody);
       applyArticleTheme();
+
+      // KaTeX আগে load করো, তারপর render করো
+      try {
+        await loadKaTeX();
+      } catch {
+        // failed, renderMathInContainer নিজেই retry করবে
+      }
+
       renderMathInContainer(articleBody);
     };
 
-    // Run immediately for desktop
-    const timer1 = setTimeout(processContent, 100);
-    // Run again for mobile (slower paint)
-    const timer2 = setTimeout(processContent, 600);
-    // Final retry for slow connections
-    const timer3 = setTimeout(processContent, 1500);
+    // Desktop এর জন্য
+    const timer1 = setTimeout(processContent, 150);
+    // Mobile slow paint
+    const timer2 = setTimeout(processContent, 800);
+    // Slow connection retry
+    const timer3 = setTimeout(processContent, 2500);
 
     return () => {
       clearTimeout(timer1);
@@ -129,23 +136,10 @@ export const ArticleHeader = ({
 
       <article className="prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none">
         <div className="p-2 sm:p-3 text-gray-700 dark:text-[#abc2d3] leading-relaxed article-body overflow-x-hidden">
-          {parse(article.description, {
-            replace(domNode) {
-              if (domNode instanceof Element) {
-                if ("contenteditable" in domNode.attribs) {
-                  delete domNode.attribs["contenteditable"];
-                }
-                if (domNode.name === "textarea") {
-                  return <></>;
-                }
-              }
-            },
-
-            htmlparser2: {
-              lowerCaseTags: false,
-              lowerCaseAttributeNames: false,
-            },
-          })}
+          <div
+            className="p-2 sm:p-3 text-gray-700 dark:text-[#abc2d3] leading-relaxed article-body overflow-x-hidden"
+            dangerouslySetInnerHTML={{ __html: article.description }}
+          />
         </div>
       </article>
 
