@@ -62,7 +62,7 @@ const Hero: React.FC = () => {
     );
   if (!total)
     return (
-      <section className="min-h-screen flex items-center justify-center bg-zinc-950">
+      <section className="min-h-screen flex items-center justify-center bg-bgPrimary">
         <p className="text-zinc-500 text-lg tracking-widest uppercase font-light">
           No heroes found
         </p>
