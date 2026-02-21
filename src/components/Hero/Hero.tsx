@@ -102,11 +102,11 @@ const Hero: React.FC = () => {
           >
             {heroes.map((h, i) => (
               <SwiperSlide key={h._id}>
-                <div className="s-grain s-inner relative w-full overflow-hidden">
+                <div className="s-grain s-inner relative w-full overflow-hidden rounded-lg">
                   <img
                     src={h.imageUrl}
                     alt={h.title}
-                    className="s-img absolute inset-0 w-full h-full object-cover object-center"
+                    className="s-img absolute inset-0 w-full h-full object-cover object-center "
                     loading={i === 0 ? "eager" : "lazy"}
                     decoding={i === 0 ? "sync" : "async"}
                     fetchPriority={i === 0 ? "high" : "low"}

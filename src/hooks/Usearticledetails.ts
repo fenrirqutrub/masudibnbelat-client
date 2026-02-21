@@ -67,9 +67,6 @@ export const useArticleDetails = ({
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
-    refetch: query.refetch, // ← expose refetch
-    // Optional: also useful sometimes
-    // isFetching: query.isFetching,
-    // status: query.status,
+    refetch: query.refetch,
   };
 };

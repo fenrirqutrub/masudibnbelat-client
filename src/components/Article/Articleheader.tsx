@@ -24,7 +24,6 @@ export const ArticleHeader = ({
   commentsCount,
   onShare,
 }: ArticleHeaderProps) => {
-  // Load KaTeX as early as possible
   useEffect(() => {
     loadKaTeX().catch(() => {});
   }, []);
@@ -42,21 +41,17 @@ export const ArticleHeader = ({
       processArticleCodeBlocks(articleBody);
       applyArticleTheme();
 
-      // KaTeX আগে load করো, তারপর render করো
       try {
         await loadKaTeX();
-      } catch {
-        // failed, renderMathInContainer নিজেই retry করবে
+      } catch (error) {
+        console.error(error);
       }
 
       renderMathInContainer(articleBody);
     };
 
-    // Desktop এর জন্য
     const timer1 = setTimeout(processContent, 150);
-    // Mobile slow paint
     const timer2 = setTimeout(processContent, 800);
-    // Slow connection retry
     const timer3 = setTimeout(processContent, 2500);
 
     return () => {
