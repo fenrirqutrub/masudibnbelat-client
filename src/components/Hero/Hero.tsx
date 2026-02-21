@@ -31,9 +31,11 @@ const Hero: React.FC = () => {
   const heroes = useMemo(() => (data?.data ?? []) as HeroItem[], [data]);
   const total = heroes.length;
 
+  // Preload first 2 images via <link rel="preload"> for fastest LCP
   useEffect(() => {
     heroes.slice(0, 2).forEach(({ imageUrl }, idx) => {
       if (idx === 0) {
+        // First image: use <link rel="preload"> — highest browser priority
         const link = document.createElement("link");
         link.rel = "preload";
         link.as = "image";
@@ -76,6 +78,7 @@ const Hero: React.FC = () => {
       </section>
     );
 
+  // Swiper config — avoid recreating object every render
   const swiperModules = total > 1 ? [Autoplay, EffectFade] : [];
   const swiperEffect = total > 1 ? "fade" : undefined;
 
@@ -96,8 +99,6 @@ const Hero: React.FC = () => {
               swiperRef.current = s;
             }}
             onSlideChange={onSlideChange}
-            preloadImages={false}
-            lazy={false}
           >
             {heroes.map((h, i) => (
               <SwiperSlide key={h._id}>
