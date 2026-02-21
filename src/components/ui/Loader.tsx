@@ -4,14 +4,14 @@ interface LoaderProps {
   fullScreen?: boolean;
 }
 
-const Loader = ({ fullScreen = false }: LoaderProps) => {
+const Loader = ({ fullScreen = true }: LoaderProps) => {
   return (
     <div
       role="status"
       aria-live="polite"
       className={`
         flex justify-center items-center
-        ${fullScreen ? "min-h-screen" : "py-10"}
+        ${fullScreen ? "min-h-screen flex " : "py-10"}
       `}
     >
       <LoaderCircle

@@ -4,9 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import {
   LayoutDashboard,
-  FilePlus,
-  Image,
-  Quote,
   Menu,
   Triangle,
   Settings,
@@ -15,10 +12,16 @@ import {
   Folder,
   FileText,
   ImageIcon,
+  Quote,
+  Image,
+  FilePlus,
+  BookOpen,
+  Camera,
+  Star,
+  Layers,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
-
 import ThemeToggle from "../../components/Navbar/ThemeToggle";
 
 interface SubNavItem {
@@ -39,26 +42,21 @@ const AdminSidebar = () => {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
 
-  // Close sidebar on route change (mobile only)
   useEffect(() => {
     if (window.innerWidth < 1024) {
       setIsOpen(false);
     }
   }, [location.pathname]);
 
-  // Handle window resize - automatically adjust sidebar based on screen size
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
-        setIsOpen(false); // Close sidebar when screen becomes smaller
+        setIsOpen(false);
       } else {
-        setIsOpen(true); // Open sidebar when there's enough space (desktop)
+        setIsOpen(true);
       }
     };
-
-    // Set initial state based on screen size
     handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -68,11 +66,6 @@ const AdminSidebar = () => {
       name: "Dashboard",
       path: "/dashboard",
       icon: LayoutDashboard,
-    },
-    {
-      name: "Management",
-      path: "/dashboard/management",
-      icon: Settings,
     },
   ];
 
@@ -92,6 +85,27 @@ const AdminSidebar = () => {
     ],
   };
 
+  // ── নতুন Management group ──
+  const managementItems: NavItem = {
+    name: "Management",
+    icon: Settings,
+    subItems: [
+      {
+        name: "Articles",
+        path: "/dashboard/management/articles",
+        icon: BookOpen,
+      },
+      {
+        name: "Categories",
+        path: "/dashboard/management/categories",
+        icon: Layers,
+      },
+      { name: "Photos", path: "/dashboard/management/photos", icon: Camera },
+      { name: "Quotes", path: "/dashboard/management/quotes", icon: Quote },
+      { name: "Heroes", path: "/dashboard/management/heroes", icon: Star },
+    ],
+  };
+
   const isActive = (path: string) => location.pathname === path;
 
   const toggleGroup = (groupName: string) => {
@@ -103,13 +117,100 @@ const AdminSidebar = () => {
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
     console.log("Logging out...");
+  };
+
+  // ── Reusable collapsible group renderer ──
+  const renderCollapsibleGroup = (
+    item: NavItem,
+    groupKey: string,
+    activeColor: string = "emerald",
+  ) => {
+    const isExpanded = expandedGroups.includes(groupKey);
+
+    const activeClass =
+      activeColor === "emerald"
+        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium"
+        : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-medium";
+
+    const Icon = item.icon;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mt-2"
+      >
+        <motion.button
+          onClick={() => toggleGroup(groupKey)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <div className="flex items-center gap-3">
+            <Icon className="w-5 h-5" />
+            <span className="text-sm font-medium">{item.name}</span>
+          </div>
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </motion.div>
+        </motion.button>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="pl-4 mt-1 space-y-1">
+                {item.subItems?.map((subItem, subIndex) => {
+                  const SubIcon = subItem.icon;
+                  const active = isActive(subItem.path);
+
+                  return (
+                    <motion.div
+                      key={subItem.path}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: subIndex * 0.03 }}
+                    >
+                      <Link to={subItem.path}>
+                        <motion.div
+                          whileHover={{
+                            x: active ? 0 : 4,
+                            transition: { duration: 0.2 },
+                          }}
+                          whileTap={{ scale: 0.97 }}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            active
+                              ? activeClass
+                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200"
+                          }`}
+                        >
+                          <SubIcon className="w-4 h-4" />
+                          <span className="text-sm">{subItem.name}</span>
+                        </motion.div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
   };
 
   return (
     <>
-      {/* Mobile Toggle Button - Only show when sidebar is closed */}
       {!isOpen && (
         <motion.button
           onClick={() => setIsOpen(true)}
@@ -125,7 +226,6 @@ const AdminSidebar = () => {
         </motion.button>
       )}
 
-      {/* Overlay for Mobile */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -139,17 +239,12 @@ const AdminSidebar = () => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <motion.aside
         initial={false}
         animate={{
           x: isOpen ? 0 : window.innerWidth >= 1024 ? 0 : -300,
         }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="fixed lg:sticky top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-40 w-[280px] flex flex-col"
       >
         {/* Header */}
@@ -188,7 +283,7 @@ const AdminSidebar = () => {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
-          {/* Main Nav Items */}
+          {/* Main nav items (Dashboard only) */}
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const active = item.path ? isActive(item.path) : false;
@@ -236,86 +331,15 @@ const AdminSidebar = () => {
             );
           })}
 
-          {/* Content Group (Collapsible) */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mt-2"
-          >
-            {/* Group Header */}
-            <motion.button
-              onClick={() => toggleGroup("content")}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <div className="flex items-center gap-3">
-                <Folder className="w-5 h-5" />
-                <span className="text-sm font-medium">Content</span>
-              </div>
-              <motion.div
-                animate={{
-                  rotate: expandedGroups.includes("content") ? 180 : 0,
-                }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="w-4 h-4" />
-              </motion.div>
-            </motion.button>
+          {/* Content group — emerald theme */}
+          {renderCollapsibleGroup(contentItems, "content", "emerald")}
 
-            {/* Sub Items */}
-            <AnimatePresence>
-              {expandedGroups.includes("content") && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pl-4 mt-1 space-y-1">
-                    {contentItems.subItems?.map((subItem, subIndex) => {
-                      const SubIcon = subItem.icon;
-                      const active = isActive(subItem.path);
-
-                      return (
-                        <motion.div
-                          key={subItem.path}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: subIndex * 0.03 }}
-                        >
-                          <Link to={subItem.path}>
-                            <motion.div
-                              whileHover={{
-                                x: active ? 0 : 4,
-                                transition: { duration: 0.2 },
-                              }}
-                              whileTap={{ scale: 0.97 }}
-                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                                active
-                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium"
-                                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200"
-                              }`}
-                            >
-                              <SubIcon className="w-4 h-4" />
-                              <span className="text-sm">{subItem.name}</span>
-                            </motion.div>
-                          </Link>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+          {/* Management group — indigo theme */}
+          {renderCollapsibleGroup(managementItems, "management", "indigo")}
         </nav>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-          {/* User Profile */}
           <motion.div
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all cursor-pointer group"
             whileHover={{ scale: 1.02 }}
@@ -338,7 +362,6 @@ const AdminSidebar = () => {
             </div>
           </motion.div>
 
-          {/* Logout Button */}
           <motion.button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"

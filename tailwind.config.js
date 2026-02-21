@@ -19,6 +19,13 @@ export default {
         activeBorder: "var(--color-active-border)",
         activeBg: "var(--color-active-bg)",
         activeText: "var(--color-active-text)",
+
+        // admin colors
+        adminBg: "var(--admin-bg)",
+        adminCard: "var(--admin-card-bg)",
+        adminText: "var(--admin-text)",
+        adminMuted: "var(--admin-text-muted)",
+        adminBorder: "var(--admin-border)",
       },
     },
   },

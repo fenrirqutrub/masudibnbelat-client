@@ -50,7 +50,6 @@
 }
 
 /* css variables */
-/* css variables */
 :root {
   --color-bg: #e9ebed;
   --color-text: #0c0d12;
@@ -60,6 +59,13 @@
   --color-active-border: rgba(15, 23, 42, 0.2);
   --color-active-bg: rgba(15, 23, 42, 0.1);
   --color-active-text: #0f172a;
+
+  /* admin code */
+  --admin-bg: #ffffff;
+  --admin-card-bg: #f8fafc;
+  --admin-text: #0c0d12;
+  --admin-text-muted: #64748b;
+  --admin-border: rgba(0, 0, 0, 0.06);
 }
 
 .dark {
@@ -71,4 +77,11 @@
   --color-active-border: rgba(248, 249, 250, 0.2);
   --color-active-bg: rgba(248, 249, 250, 0.1);
   --color-active-text: #ffffff;
+
+  /* admin colors */
+  --admin-bg: #1c293d;
+  --admin-card-bg: #0f1828;
+  --admin-text: #e9ebed;
+  --admin-text-muted: #94a3b8;
+  --admin-border: rgba(255, 255, 255, 0.08);
 }
