@@ -34,7 +34,7 @@ const Quotes = () => {
 
   if (isError) {
     return (
-      <div className="py-12 bg-[#E9EBED] dark:bg-[#0C0D12]">
+      <div className="py-12 bg-bgPrimary">
         <div className="container mx-auto px-4">
           <div className="text-center text-red-500">
             <p className="text-lg">
@@ -48,9 +48,9 @@ const Quotes = () => {
 
   if (!quotes.length) {
     return (
-      <div className="py-12 bg-[#E9EBED] dark:bg-[#0C0D12]">
+      <div className="py-12 bg-bgPrimary">
         <div className="container mx-auto px-4">
-          <div className="text-center text-[#0C0D12]/60 dark:text-[#E9EBED]/60">
+          <div className="text-center text-textPrimary">
             <QuoteIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p className="text-lg">No quotes available yet.</p>
           </div>
@@ -60,7 +60,7 @@ const Quotes = () => {
   }
 
   return (
-    <div className="py-12 md:py-16 bg-[#E9EBED] dark:bg-[#0C0D12] overflow-hidden">
+    <div className="py-12 md:py-16 bg-bgPrimary overflow-hidden">
       <div className="container mx-auto px-4 mb-10">
         <h2 className="text-3xl md:text-4xl font-bold text-[#0C0D12] dark:text-[#E9EBED] mb-2">
           Quotes Today

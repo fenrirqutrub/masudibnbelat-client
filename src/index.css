@@ -51,7 +51,7 @@
 
 /* css variables */
 :root {
-  --color-bg: #e9ebed;
+  --color-bg: #e1e0e0;
   --color-text: #0c0d12;
   --color-gray: #90a1b9;
   --color-text-hover: #2563eb;
@@ -61,8 +61,8 @@
   --color-active-text: #0f172a;
 
   /* admin code */
-  --admin-bg: #ffffff;
-  --admin-card-bg: #f8fafc;
+  --admin-bg: #e1e0e0;
+  --admin-card-bg: #e1e0e0;
   --admin-text: #0c0d12;
   --admin-text-muted: #64748b;
   --admin-border: rgba(0, 0, 0, 0.06);
