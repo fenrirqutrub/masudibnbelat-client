@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router";
 import { IoMdMail } from "react-icons/io";
 import { FaFacebook, FaTelegram, FaWhatsapp } from "react-icons/fa";
 
@@ -17,28 +16,33 @@ const socials: SocialItem[] = [
     Icon: FaFacebook,
     name: "Facebook",
     color: "#1877f2",
-    link: "/",
+    link: "https://www.facebook.com/masudibnbelat/",
   },
   {
     key: "whatsapp",
     Icon: FaWhatsapp,
     name: "Whatsapp",
     color: "#25d366",
-    link: "/",
+    link: "https://wa.me/8801319000077",
   },
   {
     key: "telegram",
     Icon: FaTelegram,
     name: "Telegram",
     color: "#24a1de",
-    link: "/",
+    link: "https://t.me/theprofessor666",
   },
-
-  { key: "email", Icon: IoMdMail, name: "e-Mail", color: "#ea4335", link: "/" },
+  {
+    key: "email",
+    Icon: IoMdMail,
+    name: "e-Mail",
+    color: "#ea4335",
+    link: "mailto:masudibnbelat@gmail.com",
+  },
 ];
 
 const SocialButton: React.FC<{ item: SocialItem }> = ({ item }) => (
-  <Link to={item.link}>
+  <a href={item.link} target="_blank" rel="noopener noreferrer">
     <button
       className="group flex items-center justify-start w-10 h-10 md:w-[45px] md:h-[45px] border-none rounded-full cursor-pointer relative overflow-hidden transition-all duration-300 shadow-[1px_1px_5px_rgba(0,0,0,0.2)] md:shadow-[2px_2px_10px_rgba(0,0,0,0.2)] hover:w-[120px] md:hover:w-[135px] lg:hover:w-[150px] hover:rounded-[30px] md:hover:rounded-[40px] bg-[var(--color)] active:translate-x-0.5 active:translate-y-0.5"
       style={
@@ -52,7 +56,7 @@ const SocialButton: React.FC<{ item: SocialItem }> = ({ item }) => (
         {item.name}
       </div>
     </button>
-  </Link>
+  </a>
 );
 
 const Social: React.FC = () => (

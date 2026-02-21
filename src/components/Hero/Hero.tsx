@@ -31,11 +31,18 @@ const Hero: React.FC = () => {
   const heroes = useMemo(() => (data?.data ?? []) as HeroItem[], [data]);
   const total = heroes.length;
 
-  // Preload first 2 images
   useEffect(() => {
-    heroes.slice(0, 2).forEach(({ imageUrl }) => {
-      const img = new Image();
-      img.src = imageUrl;
+    heroes.slice(0, 2).forEach(({ imageUrl }, idx) => {
+      if (idx === 0) {
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.href = imageUrl;
+        document.head.appendChild(link);
+      } else {
+        const img = new Image();
+        img.src = imageUrl;
+      }
     });
   }, [heroes]);
 
@@ -69,21 +76,28 @@ const Hero: React.FC = () => {
       </section>
     );
 
+  const swiperModules = total > 1 ? [Autoplay, EffectFade] : [];
+  const swiperEffect = total > 1 ? "fade" : undefined;
+
   return (
     <section className="w-full bg-bgPrimary">
       <div className="w-full pt-14 sm:pt-16 lg:pt-20">
         <div className="relative">
           <Swiper
-            effect={total > 1 ? "fade" : undefined}
-            modules={total > 1 ? [Autoplay, EffectFade] : []}
-            autoplay={{ delay: DELAY, disableOnInteraction: false }}
+            effect={swiperEffect}
+            modules={swiperModules}
+            autoplay={
+              total > 1 ? { delay: DELAY, disableOnInteraction: false } : false
+            }
             loop={total > 1}
-            speed={1100}
+            speed={900}
             className="hs w-full"
             onSwiper={(s) => {
               swiperRef.current = s;
             }}
             onSlideChange={onSlideChange}
+            preloadImages={false}
+            lazy={false}
           >
             {heroes.map((h, i) => (
               <SwiperSlide key={h._id}>
@@ -93,22 +107,27 @@ const Hero: React.FC = () => {
                     alt={h.title}
                     className="s-img absolute inset-0 w-full h-full object-cover object-center"
                     loading={i === 0 ? "eager" : "lazy"}
-                    decoding="async"
+                    decoding={i === 0 ? "sync" : "async"}
                     fetchPriority={i === 0 ? "high" : "low"}
+                    width={1920}
+                    height={700}
                   />
 
+                  {/* Overlays */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-black/5 z-[1]" />
                   <div className="absolute inset-0 s-vignette z-[2]" />
                   <div className="absolute inset-0 s-scan z-[3] opacity-40" />
                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent z-20" />
+
                   <div className="ghost" aria-hidden="true">
                     {pad(i + 1)}
                   </div>
 
+                  {/* Content */}
                   <div className="absolute inset-0 z-20 flex flex-col justify-end">
-                    <div className="px-6 pb-10 sm:px-10 sm:pb-14 md:px-14 lg:px-20 lg:pb-16 xl:px-24 xl:pb-20 max-w-5xl">
+                    <div className="px-6 pb-8 sm:px-10 sm:pb-11 md:px-14 lg:px-20 lg:pb-13 xl:px-24 xl:pb-15 max-w-5xl">
                       {/* Eyebrow */}
-                      <div className="s-eye mb-4 flex items-center gap-3">
+                      <div className="s-eye mb-3 flex items-center gap-3">
                         <span className="text-white/35 text-[9px] sm:text-[11px] tracking-[.3em] uppercase font-dm">
                           Featured
                         </span>
@@ -134,19 +153,19 @@ const Hero: React.FC = () => {
                         ))}
                       </h2>
 
-                      <div className="s-div mt-5 h-px w-14 sm:w-20 bg-gradient-to-r from-white/65 to-transparent" />
+                      <div className="s-div mt-4 h-px w-14 sm:w-20 bg-gradient-to-r from-white/65 to-transparent" />
 
                       {h.subtitle && (
-                        <p className="s-sub mt-4 text-white/50 text-sm sm:text-base leading-relaxed max-w-md font-dm font-light">
+                        <p className="s-sub mt-3 text-white/50 text-sm sm:text-base leading-relaxed max-w-md font-dm font-light">
                           {h.subtitle}
                         </p>
                       )}
 
                       {h.ctaLabel && (
-                        <div className="s-cta mt-6 sm:mt-7">
+                        <div className="s-cta mt-5 sm:mt-6">
                           <a
                             href={h.ctaHref ?? "#"}
-                            className="s-cta-btn inline-flex items-center gap-3 border border-white/35 px-6 py-3 sm:px-8 sm:py-4 font-dm"
+                            className="s-cta-btn inline-flex items-center gap-3 border border-white/35 px-6 py-3 sm:px-8 sm:py-3.5 font-dm"
                           >
                             <span className="s-cl text-white text-xs sm:text-sm tracking-[.2em] uppercase font-medium">
                               {h.ctaLabel}
@@ -158,6 +177,7 @@ const Hero: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Corner accents */}
                   <div className="absolute top-5 right-5 sm:top-7 sm:right-7 z-20 w-8 h-8 border-t border-r border-white/20" />
                   <div className="absolute bottom-5 left-5 sm:bottom-7 sm:left-7 z-20 w-8 h-8 border-b border-l border-white/20" />
                 </div>
@@ -167,7 +187,7 @@ const Hero: React.FC = () => {
 
           {total > 1 && (
             <div className="absolute bottom-0 right-0 z-30 flex items-end">
-              <div className="hero-controls flex flex-col gap-4 px-5 py-5 sm:px-6 sm:py-6">
+              <div className="hero-controls flex flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5">
                 <div className="flex items-baseline gap-1">
                   <span className="s-num text-white text-2xl sm:text-3xl leading-none font-bold">
                     {pad(active + 1)}
@@ -198,14 +218,14 @@ const Hero: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <button
-                    className="s-btn w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center border border-white/20 text-white/70"
+                    className="s-btn w-9 h-9 flex items-center justify-center border border-white/20 text-white/70"
                     onClick={prev}
                     aria-label="Previous"
                   >
                     <ChevronLeft size={14} />
                   </button>
                   <button
-                    className="s-btn w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center border border-white/20 text-white/70"
+                    className="s-btn w-9 h-9 flex items-center justify-center border border-white/20 text-white/70"
                     onClick={next}
                     aria-label="Next"
                   >
