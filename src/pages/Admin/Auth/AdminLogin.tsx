@@ -11,8 +11,8 @@ interface LoginForm {
 }
 
 const CREDENTIALS = {
-  email: ["hello@world.com", "bal@chal.com", "mib@gmail.com"],
-  password: ["696969", "696969", "696969"],
+  email: ["hello@world.com", "mib@gmail.com"],
+  password: ["696969", "696969"],
 };
 
 const AUTH_KEY = "admin_auth_token";
@@ -83,10 +83,10 @@ const AdminLogin = () => {
     !hasInput || isSubmitting
       ? "bg-gray-400 cursor-not-allowed"
       : errors.email || errors.password || !isValid
-      ? "bg-gradient-to-r from-red-500 to-rose-600 text-white"
-      : theme === "dark"
-      ? "bg-white text-black hover:bg-gray-100"
-      : "bg-black text-white hover:bg-gray-900";
+        ? "bg-gradient-to-r from-red-500 to-rose-600 text-white"
+        : theme === "dark"
+          ? "bg-white text-black hover:bg-gray-100"
+          : "bg-black text-white hover:bg-gray-900";
 
   return (
     <div
@@ -140,8 +140,8 @@ const AdminLogin = () => {
                   errors.email
                     ? "text-red-500"
                     : theme === "dark"
-                    ? "text-slate-500"
-                    : "text-gray-400"
+                      ? "text-slate-500"
+                      : "text-gray-400"
                 }`}
               />
               <input
@@ -161,8 +161,8 @@ const AdminLogin = () => {
                   errors.email
                     ? "border-red-500"
                     : theme === "dark"
-                    ? "border-[#2a2b35] focus:border-blue-500"
-                    : "border-gray-200 focus:border-blue-500"
+                      ? "border-[#2a2b35] focus:border-blue-500"
+                      : "border-gray-200 focus:border-blue-500"
                 }`}
                 placeholder="Email address"
               />
@@ -180,8 +180,8 @@ const AdminLogin = () => {
                   errors.password
                     ? "text-red-500"
                     : theme === "dark"
-                    ? "text-slate-500"
-                    : "text-gray-400"
+                      ? "text-slate-500"
+                      : "text-gray-400"
                 }`}
               />
               <input
@@ -198,8 +198,8 @@ const AdminLogin = () => {
                   errors.password
                     ? "border-red-500"
                     : theme === "dark"
-                    ? "border-[#2a2b35] focus:border-blue-500"
-                    : "border-gray-200 focus:border-blue-500"
+                      ? "border-[#2a2b35] focus:border-blue-500"
+                      : "border-gray-200 focus:border-blue-500"
                 }`}
                 placeholder="Password"
               />
@@ -227,8 +227,8 @@ const AdminLogin = () => {
               {isSubmitting
                 ? "Signing In..."
                 : hasInput && !isValid && !isSubmitting
-                ? "Invalid Credentials"
-                : "Sign In"}
+                  ? "Invalid Credentials"
+                  : "Sign In"}
             </button>
           </form>
         </div>
