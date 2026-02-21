@@ -30,7 +30,7 @@ const socials: SocialItem[] = [
     Icon: FaTelegram,
     name: "Telegram",
     color: "#24a1de",
-    link: "https://t.me/theprofessor666",
+    link: "https://t.me/mrprofessor666",
   },
   {
     key: "email",

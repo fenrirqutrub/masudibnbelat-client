@@ -86,11 +86,15 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [nextTheme, setNextTheme] = useState<Theme>(theme);
 
-  // ✅ Fix: set both data-theme AND class so Tailwind dark: works
+  // useEffect(() => {
+  //   const root = document.documentElement;
+  //   root.setAttribute("data-theme", theme);
+  //   root.classList.toggle("dark", theme === "dark");
+  //   updateEditorTheme(theme);
+  // }, [theme]);
+
   useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-theme", theme);
-    root.classList.toggle("dark", theme === "dark");
+    document.documentElement.setAttribute("data-theme", theme);
     updateEditorTheme(theme);
   }, [theme]);
 

@@ -1,12 +1,12 @@
 @import "tailwindcss";
+
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @import url("https://fonts.googleapis.com/css2?family=Pacifico&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
-
 @import url("https://fonts.googleapis.com/css2?family=Bitcount+Grid+Single:wght@100..900&display=swap");
-
 @import "swiper/swiper-bundle.css";
 
+/* ── Fonts ── */
 .pacifico {
   font-family: "Pacifico", cursive !important;
   font-weight: 400;
@@ -39,17 +39,19 @@
     "ELXP" 0;
 }
 
+/* ── Base ── */
 @layer base {
   * {
     @apply border-zinc-200 dark:border-zinc-800;
   }
 
   body {
-    @apply bg-[#e1e0e0] dark:bg-[#13161C] text-[#13161C] dark:text-[#e1e0e0];
+    background-color: var(--color-bg);
+    color: var(--color-text);
   }
 }
 
-/* css variables */
+/* ── Light (default) ── */
 :root {
   --color-bg: #e1e0e0;
   --color-text: #13161c;
@@ -60,7 +62,6 @@
   --color-active-bg: rgba(15, 23, 42, 0.1);
   --color-active-text: #13161c;
 
-  /* admin code */
   --admin-bg: #e1e0e0;
   --admin-card-bg: #e1e0e0;
   --admin-text: #13161c;
@@ -68,7 +69,8 @@
   --admin-border: rgba(0, 0, 0, 0.06);
 }
 
-.dark {
+/* ── Dark ── */
+[data-theme="dark"] {
   --color-bg: #13161c;
   --color-text: #e9ebed;
   --color-gray: #90a1b9;
@@ -78,7 +80,6 @@
   --color-active-bg: rgba(248, 249, 250, 0.1);
   --color-active-text: #ffffff;
 
-  /* admin colors */
   --admin-bg: #1c293d;
   --admin-card-bg: #0f1828;
   --admin-text: #e9ebed;
