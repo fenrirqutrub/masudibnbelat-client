@@ -45,31 +45,31 @@
   }
 
   body {
-    @apply bg-white dark:bg-black text-black dark:text-white;
+    @apply bg-[#e1e0e0] dark:bg-[#13161C] text-[#13161C] dark:text-[#e1e0e0];
   }
 }
 
 /* css variables */
 :root {
   --color-bg: #e1e0e0;
-  --color-text: #0c0d12;
+  --color-text: #13161c;
   --color-gray: #90a1b9;
   --color-text-hover: #2563eb;
 
   --color-active-border: rgba(15, 23, 42, 0.2);
   --color-active-bg: rgba(15, 23, 42, 0.1);
-  --color-active-text: #0f172a;
+  --color-active-text: #13161c;
 
   /* admin code */
   --admin-bg: #e1e0e0;
   --admin-card-bg: #e1e0e0;
-  --admin-text: #0c0d12;
+  --admin-text: #13161c;
   --admin-text-muted: #64748b;
   --admin-border: rgba(0, 0, 0, 0.06);
 }
 
 .dark {
-  --color-bg: #0c0d12;
+  --color-bg: #13161c;
   --color-text: #e9ebed;
   --color-gray: #90a1b9;
   --color-text-hover: #3b82f6;

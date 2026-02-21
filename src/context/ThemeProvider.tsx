@@ -60,22 +60,19 @@ const THEME_COLORS: Record<
 
 const getInitialTheme = (): Theme => {
   try {
-    // First check if user has a saved preference
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === "light" || saved === "dark") return saved;
   } catch {
     /* empty */
   }
 
-  // If no saved preference, check system preference
   if (typeof window !== "undefined" && window.matchMedia) {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    return prefersDark ? "dark" : "light";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
   }
 
-  return "dark"; // fallback default
+  return "dark";
 };
 
 const useTheme = () => {
@@ -89,9 +86,11 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [nextTheme, setNextTheme] = useState<Theme>(theme);
 
-  // Apply theme so Tailwind dark: classes work
+  // ✅ Fix: set both data-theme AND class so Tailwind dark: works
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    const root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    root.classList.toggle("dark", theme === "dark");
     updateEditorTheme(theme);
   }, [theme]);
 
@@ -99,9 +98,7 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const newTheme = theme === "light" ? "dark" : "light";
     setNextTheme(newTheme);
     setIsAnimating(true);
-
     localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-
     setTimeout(() => setTheme(newTheme), 200);
     setTimeout(() => setIsAnimating(false), 500);
   };
@@ -154,10 +151,7 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
                     Object.entries(cornerStyle).map(([k, v]) => [k, v + 250]),
                   ),
                   background: colors.particle,
-                  boxShadow: `0 0 15px ${colors.particle.replace(
-                    "0.7",
-                    "0.5",
-                  )}`,
+                  boxShadow: `0 0 15px ${colors.particle.replace("0.7", "0.5")}`,
                 }}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{

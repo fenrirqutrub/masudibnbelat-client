@@ -1,31 +1,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation, useNavigate } from "react-router";
-import { useTheme } from "../../context/ThemeProvider";
+import { Link, useLocation, useNavigate } from "react-router";
 import ThemeToggle from "./ThemeToggle";
 
 type MenuItem = {
   readonly name: string;
   readonly path: string;
-  readonly subItems?: never;
 };
 
 /* ------------------------------------------------------------------ */
 /*                         NAVBAR COMPONENT                           */
 /* ------------------------------------------------------------------ */
 const Navbar: React.FC = () => {
-  const [state, setState] = useState({
-    mobileMenuOpen: false,
-    scrolled: false,
-    openDropdown: null as string | null,
-  });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const { theme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Static menu — no sub-items
   const MENU_CONFIG = useMemo<MenuItem[]>(
     () => [
       { name: "home", path: "/" },
@@ -35,69 +28,49 @@ const Navbar: React.FC = () => {
     [],
   );
 
-  const colors = {
-    dark: {
-      bg: { primary: "#0D0F14", secondary: "#171B1F", mobile: "#0C0D12" },
-      text: { primary: "#F8F9FA", secondary: "#94A3B8" },
-      border: "rgba(248, 249, 250, 0.1)",
-      hover: "rgba(248, 249, 250, 0.05)",
-    },
-    light: {
-      bg: { primary: "#FFFFFF", secondary: "#F1F5F9", mobile: "#F8FAFC" },
-      text: { primary: "#0F172A", secondary: "#64748B" },
-      border: "oklch(70.7% 0.022 261.325)",
-      hover: "rgba(15, 23, 42, 0.05)",
-    },
-  }[theme];
-
-  // Simplified active item detection (no submenus)
+  // Active item detection
   const activeItem = useMemo(() => {
-    const currentPath = location.pathname;
-
-    const exactMatch = MENU_CONFIG.find((item) => item.path === currentPath);
-    if (exactMatch) return exactMatch.name;
-
-    // Optional: highlight "articles" when inside /articles/*
-    if (currentPath.startsWith("/articles")) {
-      return "articles";
-    }
-
-    return "home";
+    const path = location.pathname;
+    if (path === "/") return "home";
+    const match = MENU_CONFIG.find(
+      (item) => item.path !== "/" && path.startsWith(item.path),
+    );
+    return match?.name ?? "home";
   }, [MENU_CONFIG, location.pathname]);
 
   /* -------------------------------------------------------------- */
-  /*                SCROLL, BODY LOCK                               */
+  /*                     SIDE EFFECTS                               */
   /* -------------------------------------------------------------- */
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled = window.scrollY > 20;
-      setState((p) => (p.scrolled !== scrolled ? { ...p, scrolled } : p));
+      const isScrolled = window.scrollY > 20;
+      setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = state.mobileMenuOpen ? "hidden" : "unset";
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [state.mobileMenuOpen]);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
-    setState((p) => ({ ...p, openDropdown: null }));
+    setMobileMenuOpen(false);
   }, [location.pathname]);
 
   /* -------------------------------------------------------------- */
   /*                         HANDLERS                               */
   /* -------------------------------------------------------------- */
   const toggleMobileMenu = useCallback(() => {
-    setState((p) => ({ ...p, mobileMenuOpen: !p.mobileMenuOpen }));
+    setMobileMenuOpen((prev) => !prev);
   }, []);
 
   const handleNavigation = useCallback(
     (path: string) => {
-      setState((p) => ({ ...p, mobileMenuOpen: false, openDropdown: null }));
+      setMobileMenuOpen(false);
       navigate(path);
     },
     [navigate],
@@ -105,20 +78,16 @@ const Navbar: React.FC = () => {
 
   const handleLogo = useCallback(() => {
     const scrollTop = window.scrollY;
-    const scrollHeight = document.documentElement.scrollHeight;
-    const clientHeight = window.innerHeight;
-    const maxScroll = scrollHeight - clientHeight;
+    const maxScroll =
+      document.documentElement.scrollHeight - window.innerHeight;
 
-    const nearTop = scrollTop <= 50;
-    const nearBottom = maxScroll - scrollTop <= 50;
-
-    if (nearTop) {
-      window.scrollTo({ top: scrollHeight, behavior: "smooth" });
-    } else if (nearBottom) {
+    if (scrollTop <= 50) {
+      window.scrollTo({ top: maxScroll, behavior: "smooth" });
+    } else if (maxScroll - scrollTop <= 50) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       window.scrollTo({
-        top: scrollTop < maxScroll / 2 ? scrollHeight : 0,
+        top: scrollTop < maxScroll / 2 ? maxScroll : 0,
         behavior: "smooth",
       });
     }
@@ -132,21 +101,21 @@ const Navbar: React.FC = () => {
       {/* ========== FIXED NAVBAR ========== */}
       <nav
         className={`fixed z-50 transition-all duration-300 ${
-          state.scrolled
+          scrolled
             ? "top-0 left-0 right-0 py-3 border-b shadow-lg"
             : "top-0 left-0 right-0 py-4"
         }`}
         style={{
-          backgroundColor: colors.bg.primary,
+          backgroundColor: "var(--color-bg)",
           backdropFilter: "blur(12px)",
-          borderColor: state.scrolled ? colors.border : "transparent",
+          borderColor: scrolled ? "var(--color-active-border)" : "transparent",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between">
             {/* LOGO */}
             <button
-              className="relative text-2xl md:text-3xl pacifico leading-none cursor-pointer"
+              className="relative text-2xl md:text-3xl pacifico leading-none cursor-pointer outline-none"
               aria-label="MiB"
               onClick={() => {
                 handleLogo();
@@ -162,14 +131,14 @@ const Navbar: React.FC = () => {
                 style={{ lineHeight: 1 }}
               >
                 {[
-                  { x: 0.6, y: 0.6, z: 5 },
-                  { x: -0.6, y: -0.6, z: 6 },
-                  { x: 0, y: 0.9, z: 7 },
+                  { x: 0.6, y: 0.6 },
+                  { x: -0.6, y: -0.6 },
+                  { x: 0, y: 0.9 },
                 ].map((o, i) => (
                   <span
                     key={i}
                     aria-hidden="true"
-                    className="absolute inset-0 text-textPrimary z-10"
+                    className="absolute inset-0 text-textPrimary"
                     style={{ transform: `translate(${o.x}px, ${o.y}px)` }}
                   >
                     MiB
@@ -183,16 +152,15 @@ const Navbar: React.FC = () => {
             <ul className="hidden md:flex items-center space-x-1 relative">
               {MENU_CONFIG.map((item) => {
                 const isActive = activeItem === item.name;
-
                 return (
                   <li key={item.name} className="relative">
                     <button
                       onClick={() => handleNavigation(item.path)}
-                      className="px-5 py-2.5 rounded-lg font-medium capitalize transition-all cursor-pointer relative z-10"
+                      className="px-5 py-2.5 rounded-lg font-medium capitalize transition-all cursor-pointer relative z-10 outline-none"
                       style={{
                         color: isActive
-                          ? colors.text.primary
-                          : colors.text.secondary,
+                          ? "var(--color-active-text)"
+                          : "var(--color-gray)",
                       }}
                     >
                       {item.name}
@@ -201,10 +169,10 @@ const Navbar: React.FC = () => {
                     {isActive && (
                       <motion.div
                         layoutId="desktopActiveTab"
-                        className="absolute inset-0 rounded-lg border pointer-events-none "
+                        className="absolute inset-0 rounded-lg border pointer-events-none"
                         style={{
-                          backgroundColor: colors.bg.secondary,
-                          borderColor: colors.border,
+                          backgroundColor: "var(--color-active-bg)",
+                          borderColor: "var(--color-active-border)",
                         }}
                         transition={{
                           type: "spring",
@@ -227,14 +195,14 @@ const Navbar: React.FC = () => {
 
               <button
                 onClick={toggleMobileMenu}
-                className="md:hidden p-2.5 rounded-lg transition-all z-[60] relative"
+                className="md:hidden p-2.5 rounded-lg transition-all z-[60] relative outline-none"
                 style={{
-                  backgroundColor: colors.bg.secondary,
-                  color: colors.text.primary,
+                  backgroundColor: "var(--color-active-bg)",
+                  color: "var(--color-text)",
                 }}
                 aria-label="Toggle menu"
               >
-                {state.mobileMenuOpen ? (
+                {mobileMenuOpen ? (
                   <X className="w-5 h-5" />
                 ) : (
                   <Menu className="w-5 h-5" />
@@ -247,7 +215,7 @@ const Navbar: React.FC = () => {
 
       {/* ========== MOBILE MENU ========== */}
       <AnimatePresence mode="wait">
-        {state.mobileMenuOpen && (
+        {mobileMenuOpen && (
           <>
             {/* Backdrop */}
             <motion.div
@@ -261,7 +229,7 @@ const Navbar: React.FC = () => {
             {/* Drawer */}
             <motion.div
               className="fixed inset-y-0 right-0 w-full max-w-md z-[56] md:hidden shadow-2xl overflow-hidden"
-              style={{ backgroundColor: colors.bg.primary }}
+              style={{ backgroundColor: "var(--color-bg)" }}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
@@ -271,20 +239,20 @@ const Navbar: React.FC = () => {
                 {/* Header */}
                 <div
                   className="flex items-center justify-between p-6 border-b"
-                  style={{ borderColor: colors.border }}
+                  style={{ borderColor: "var(--color-active-border)" }}
                 >
                   <h2
                     className="text-2xl font-bold pacifico"
-                    style={{ color: colors.text.primary }}
+                    style={{ color: "var(--color-text)" }}
                   >
                     MiB
                   </h2>
                   <motion.button
                     onClick={toggleMobileMenu}
-                    className="p-2 rounded-full transition-colors"
+                    className="p-2 rounded-full transition-colors outline-none"
                     style={{
-                      backgroundColor: colors.hover,
-                      color: colors.text.primary,
+                      backgroundColor: "var(--color-active-bg)",
+                      color: "var(--color-text)",
                     }}
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
@@ -299,16 +267,15 @@ const Navbar: React.FC = () => {
                   <ul className="space-y-1">
                     {MENU_CONFIG.map((item) => {
                       const isActive = activeItem === item.name;
-
                       return (
                         <li key={item.name}>
                           <button
                             onClick={() => handleNavigation(item.path)}
-                            className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all relative overflow-hidden"
+                            className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all relative overflow-hidden outline-none"
                             style={{
                               color: isActive
-                                ? colors.text.primary
-                                : colors.text.secondary,
+                                ? "var(--color-active-text)"
+                                : "var(--color-gray)",
                             }}
                           >
                             {isActive && (
@@ -316,7 +283,7 @@ const Navbar: React.FC = () => {
                                 className="absolute inset-0 rounded-xl pointer-events-none"
                                 layoutId="mobileActiveBg"
                                 style={{
-                                  backgroundColor: colors.bg.secondary,
+                                  backgroundColor: "var(--color-active-bg)",
                                 }}
                                 transition={{
                                   type: "spring",
@@ -331,7 +298,7 @@ const Navbar: React.FC = () => {
                             {isActive && (
                               <span
                                 className="text-sm ml-2 relative z-10"
-                                style={{ color: colors.text.secondary }}
+                                style={{ color: "var(--color-gray)" }}
                               >
                                 Current
                               </span>
@@ -346,15 +313,19 @@ const Navbar: React.FC = () => {
                 {/* Footer */}
                 <div
                   className="p-6 border-t"
-                  style={{ borderColor: colors.border }}
+                  style={{ borderColor: "var(--color-active-border)" }}
                 >
                   <div className="flex flex-col items-center space-y-4">
                     <ThemeToggle size={42} animationSpeed={0.6} />
                     <p
                       className="text-xs"
-                      style={{ color: colors.text.secondary }}
+                      style={{ color: "var(--color-gray)" }}
                     >
-                      © 2025 Masud ibn Belat. All rights reserved.
+                      &copy; 2025{" "}
+                      <Link to="/admin-login" className="font-bold">
+                        Masud ibn Belat.
+                      </Link>{" "}
+                      All rights reserved.
                     </p>
                   </div>
                 </div>
